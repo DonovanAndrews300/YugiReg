@@ -1,0 +1,29 @@
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm/
+
+# VS Code directories
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+
+# ESLint
+.eslintcache
+
+
+# TypeScript
+*.tsbuildinfo
+dist/
+
+# Build directory
+build/

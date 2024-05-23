@@ -1,0 +1,95 @@
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #1a1a2e;
+  background-image: url('patterns.png');
+  color: #fff; 
+}
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  position: relative;
+}
+
+
+.file-uploader {
+  text-align: center;
+  padding: 20px;
+}
+
+.file-uploader p {
+  font-size: 18px;
+  color: #007BFF;
+  margin-bottom: 10px;
+}
+
+
+.instructions-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.instructions {
+  font-size: 16px;
+  color: #ccc;
+  margin-left: 10px;
+}
+
+
+.qa-container {
+  margin-top: 20px;
+}
+
+.faq-header {
+  font-size: 24px;
+  color: #007BFF;
+  margin-bottom: 20px;
+}
+
+.question-header {
+  font-size: 18px;
+  color: #fff; 
+  margin-bottom: 10px;
+}
+.file-uploader-container {
+  border: 2px solid #fff;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.answer {
+  font-size: 16px;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+
+.footer {
+  text-align: center;
+  font-size: 14px;
+  color: #ccc; 
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #444; 
+}
+.home-banner {
+  background-color: #007BFF; 
+  color: #fff; 
+  text-align: center;
+  padding: 20px 0;
+}
+
+.home-banner h1 {
+  font-size: 36px;
+  margin: 0;
+}
