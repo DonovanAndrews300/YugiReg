@@ -1,8 +1,8 @@
 {
-  "name": "react-typescript",
+  "name": "YugiReg",
   "version": "1.0.0",
   "type": "module",
-  "description": "React TypeScript on Replit, using Vite bundler",
+  "description": "Project to automatically fill out Konami Yugioh tournament forms",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
