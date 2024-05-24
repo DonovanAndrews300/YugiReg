@@ -6,7 +6,6 @@ This React application helps you fill out Yu-Gi-Oh! Konami registration forms us
 
 - **File Upload**: Upload YDK files to autofill the registration form.
 - **Form Autofill**: Automatically fills in the form fields based on the uploaded YDK file data.
-- **Real-time Validation**: Ensures the form is correctly filled before submission.
 - **Downloadable PDF**: Allows you to download the filled registration form as a PDF.
 
 ## Installation
@@ -19,12 +18,6 @@ git clone https://github.com/your-username/your-repo-name.git
 ```
 
 There is a demo ydk file within the client folder of the project that you can use to test out how the application works.
-
-## Usage
-
-- **Upload YDK File**: Click the "Upload YDK File" button and select your YDK file.
-- **Autofill Form**: The form fields will be automatically populated based on the YDK file data.
-- **Download PDF**: After submission, the file will automatically download.
 
 ## File Structure
 
