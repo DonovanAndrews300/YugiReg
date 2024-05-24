@@ -1,28 +1,28 @@
-# Yu-Gi-Oh! Konami Registration Form Autofill
-
+Yu-Gi-Oh! Konami Registration Form Autofill
 This React application helps you fill out Yu-Gi-Oh! Konami registration forms using YDK files. Upload your YDK file, and the app will automatically populate the necessary fields in the registration form.
 
-## Features
+Features
+File Upload: Upload YDK files to autofill the registration form.
+Form Autofill: Automatically fills in the form fields based on the uploaded YDK file data.
+Real-time Validation: Ensures the form is correctly filled before submission.
+Downloadable PDF: Allows you to download the filled registration form as a PDF.
+Installation
+To get started with this project, follow these steps:
 
-- **File Upload**: Upload YDK files to autofill the registration form.
-- **Form Autofill**: Automatically fills in the form fields based on the uploaded YDK file data.
-- **Real-time Validation**: Ensures the form is correctly filled before submission.
-- **Downloadable PDF**: Download the filled registration form as a PDF.
+Clone the repository:
 
-## Installation
-
-To get started, clone the repository and install the dependencies:
-
-```bash
+```
 git clone https://github.com/your-username/your-repo-name.git
 cd your-repo-name
+Install the dependencies:
+```
+```
 npm install
-Running the App
+```
 Start the development server:
-
-bash
-Copy code
+```
 npm start
+```
 Open your browser and navigate to http://localhost:3000 to see the app in action.
 
 Usage
@@ -35,8 +35,7 @@ npm start: Starts the development server.
 npm run build: Builds the app for production.
 npm run lint: Lints the code using ESLint and fixes issues where possible.
 File Structure
-plaintext
-Copy code
+```
 .
 ├── public
 │   ├── index.html
@@ -59,6 +58,7 @@ Copy code
 ├── .gitignore
 ├── package.json
 └── README.md
+```
 Contributing
 Contributions are welcome! Please fork the repository and submit a pull request with your changes. For major changes, please open an issue first to discuss what you would like to change.
 
