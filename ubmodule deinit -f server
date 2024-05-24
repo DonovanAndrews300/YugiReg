@@ -1,0 +1,29 @@
+[33mcommit 229889ee84df0c88e42cd86176440e3b1a0cf839[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: Donovan <donovanandrews300@gmail.com>
+Date:   Thu May 23 20:24:04 2024 -0400
+
+    added server
+
+[33mcommit db66e62ff7f2e55b5d45b46003f771fe204e6509[m
+Author: Donovan <donovanandrews300@gmail.com>
+Date:   Thu May 23 20:22:19 2024 -0400
+
+    removed server
+
+[33mcommit bd8d2c5d36ccf83635d5e9dd4bd941678ce05bc0[m
+Author: Donovan <donovanandrews300@gmail.com>
+Date:   Thu May 23 20:10:07 2024 -0400
+
+    add server
+
+[33mcommit 425ceaba4f21b346278c6ae2e4ff2ed21da49b00[m
+Author: Donovan <donovanandrews300@gmail.com>
+Date:   Thu May 23 19:20:00 2024 -0400
+
+    add server
+
+[33mcommit 9497631ac0d4ab5389274fb2defb9c1aec3b0819[m
+Author: Donovan <donovanandrews300@gmail.com>
+Date:   Thu May 23 19:17:58 2024 -0400
+
+    add clientand server
