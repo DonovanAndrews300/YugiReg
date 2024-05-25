@@ -9,7 +9,9 @@ import { getDeck, fillForm } from "./helpers.js";
 
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://yugireg.netlify.app' // Adjust this to match your front-end URL exactly or use '*' for all origins (not recommended for production)
+}));
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
