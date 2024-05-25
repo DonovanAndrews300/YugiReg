@@ -2,7 +2,7 @@ export const uploadFile = async (file: File): Promise<void> => {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await fetch('https://api-yugireg.com', {
+    const response = await fetch('https://yugireg-45086852d588.herokuapp.com/', {
       method: 'POST',
       body: formData,
     });
