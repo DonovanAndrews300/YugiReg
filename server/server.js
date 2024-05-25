@@ -7,10 +7,6 @@ const app = express();
 
 app.use(cors());
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  next();
-});
 const port = process.env.PORT || 3000;
 import('dotenv').then(({ config }) => config());
 app.listen(port, () => {
