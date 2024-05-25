@@ -9,6 +9,9 @@ const client = new DynamoDBClient({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
+console.log("ENV vars:"+process.env.AWS_ACCESS_KEY_ID )
+console.log("ENV vars:"+process.env.AWS_SECRET_ACCESS_KEY
+)
 
 export const writeFromYGOPRO = async () => {
   function splitIntoBatches (array, batchSize) {
