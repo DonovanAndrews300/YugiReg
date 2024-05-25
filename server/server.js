@@ -4,13 +4,14 @@ import multer from "multer";
 import { getDeck, fillForm } from "./helpers.js";
 
 // Conditionally use dotenv only in development
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+
+
+
 
 const app = express();
 app.use(cors());
-
+console.log("ENV vars:"+process.env.AWS_SECRET_ACCESS_KEY )
+console.log("ENV vars:"+process.env.AWS_ACCESS_KEY)
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
