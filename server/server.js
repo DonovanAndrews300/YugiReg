@@ -4,7 +4,6 @@ import multer from "multer";
 import { getDeck, fillForm } from "./helpers.js";
 
 
-  import('dotenv').then(({ config }) => config());
 
 
 const app = express();
