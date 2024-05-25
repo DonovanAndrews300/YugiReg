@@ -3,8 +3,8 @@ import {  BatchWriteCommand, } from "@aws-sdk/lib-dynamodb";
 import { PDFDocument }  from "pdf-lib";
 import { readFile } from "fs/promises";
 import { DynamoDBClient, BatchGetItemCommand } from "@aws-sdk/client-dynamodb";
-console.log("ENV vars:"+process.env.AWS_ACCESS_KEY )
-console.log("ENV vars:"+process.env.AWS_ACCESS_KEY )
+console.log("ENV vars:"+process.env.AWS_ACCESS_KEY_ID )
+console.log("ENV vars:"+process.env.AWS_SECRET_ACCESS_KEY)
 const client = new DynamoDBClient({
   region: "us-east-1",
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
