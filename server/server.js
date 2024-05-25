@@ -3,15 +3,12 @@ import cors from 'cors';
 import multer from "multer";
 import { getDeck, fillForm } from "./helpers.js";
 
-// Conditionally use dotenv only in development
 
   import('dotenv').then(({ config }) => config());
 
 
 const app = express();
-app.use(cors({
-  origin: 'https://yugireg.netlify.app' // Adjust this to match your front-end URL exactly or use '*' for all origins (not recommended for production)
-}));
+app.use(cors());
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
