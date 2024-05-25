@@ -6,9 +6,11 @@ const app = express();
 
 
 app.use(cors());
-
+if (process.env.NODE_ENV !== 'production') {
+  import('dotenv').then(({ config }) => config());
+}
 const port = process.env.PORT || 3000;
-import('dotenv').then(({ config }) => config());
+
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
 });
