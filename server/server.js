@@ -1,7 +1,11 @@
 import express from "express";
+import cors from 'cors'
 import multer from "multer";
-import {getDeck, fillForm} from "../server/helpers.js"
+import {getDeck, fillForm} from "./helpers.js"
 const app = express();
+
+
+app.use(cors());
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
