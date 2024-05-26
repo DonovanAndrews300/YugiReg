@@ -1,6 +1,8 @@
 import express from "express";
 import cors from 'cors';
-import multer from "multer";
+import multer from "multer"; 
+import { config } from 'dotenv';
+config();
 import { getDeck, fillForm } from "./helpers.js";
 
 

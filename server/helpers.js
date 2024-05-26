@@ -1,62 +1,47 @@
 
-import {  BatchWriteCommand, } from "@aws-sdk/lib-dynamodb";
+import {  BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { PDFDocument }  from "pdf-lib";
 import { readFile } from "fs/promises";
-import { DynamoDBClient, BatchGetItemCommand } from "@aws-sdk/client-dynamodb";
-console.log("ENV vars:"+process.env.AWS_ACCESS_KEY_ID )
-console.log("ENV vars:"+process.env.AWS_SECRET_ACCESS_KEY)
+import axios from "axios";
+import { DynamoDBClient, GetItemCommand, PutItemCommand} from "@aws-sdk/client-dynamodb";
 const client = new DynamoDBClient({
   region: "us-east-1",
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
 
+
+
+//Function to update DynamoDb with new cards
 export const writeFromYGOPRO = async () => {
-  function splitIntoBatches (array, batchSize) {
-    const batches = [];
-    for (let i = 0; i < array.length; i += batchSize) {
-      batches.push(array.slice(i, i + batchSize));
-    }
+  // Fetch cards data from the API
+  const response = await axios.get("https://db.ygoprodeck.com/api/v7/cardinfo.php");
+  const allCards = response.data.data;
 
-    return batches;
+  console.log("Processing cards...");
+  for (const card of allCards) {
+    await putItem(card);
   }
-  const batchWrite = async (batches) => {
-    return batches.forEach(async (batch) =>{
-      const params = {
-        RequestItems: {
-          YGOCardDatabase: batch,
-        },
-      };
-      const command = new BatchWriteCommand(params);
-      try {
-        await setTimeout(() => docClient.send(command), 3000);
-      }
-      catch (err) {
-        console.log(err);
-      }
-    });
+  console.log("All cards processed.");
+};
+
+const putItem = async (card) => {
+  const params = {
+    TableName: "YGOCardDatabase",
+    Item: {
+      card_id: { S: card.id.toString() }, // Make sure IDs are strings
+      name: { S: card.name },             // Assuming 'name' is a required attribute
+      id:{S:card.id.toString() },
+      type:{S:card.type},
+    },
+    ConditionExpression: "attribute_not_exists(card_id)" // Only put if card_id does not exist
+
   };
-  const allYgoCards = await axios.get("https://db.ygoprodeck.com/api/v7/cardinfo.php");
-  const allCardsFormatted = allYgoCards.data.data.map(card => {
-    if (!card.id) return;
-    const formattedCard = {
-      PutRequest:{
-        Item:{
-          name: card.name,
-          id: card.id,
-          type: card.type,
-          card_id: card.id
-        },
-        ConditionExpression: "attribute_not_exists(card.id)",
-      }
-    };
 
-    return formattedCard;
-  });
-  const itemBatches = splitIntoBatches(allCardsFormatted, 4);
-  batchWrite(itemBatches).then(() => console.log("done!"));
-
+  try {
+    const result = await client.send(new PutItemCommand(params));
+  } catch (err) {
+    console.error("Error putting item:", err);
+  }
 };
 export const getUniqueYdkIds = async (ydkFile) => {
   const data = Buffer.from(ydkFile, "utf-8");
@@ -113,73 +98,59 @@ export const getYdkIds = async (ydkFile) => {
   return cardIds;
 };
 
+
 export const getDeck = async (ydk) => {
   const singlesDeckIds = await getUniqueYdkIds(ydk);
-  const fullDeckIds = await getYdkIds(ydk);
-  const mainDeckParams =  {
-    RequestItems: {
-      "YGOCardDatabase": {
-        Keys: singlesDeckIds.main.map((id) => ({ card_id:{ N:id } }))
-      }
-    }
-  };
-
-  const extraDeckParams = {
-    RequestItems: {
-      "YGOCardDatabase": {
-        Keys: singlesDeckIds.extra.map((id) => ({ card_id:{ N:id } }))
-      }
-    }
-  };
-  const sideDeckParams = {
-    RequestItems: {
-      "YGOCardDatabase": {
-        Keys: singlesDeckIds.side.map((id) => ({ card_id:{ N:id } }))
-      }
-    }
-  };
-
-  // Create a BatchGetItemCommand instance
-  const getMainDeck = new BatchGetItemCommand(mainDeckParams);
-  const getExtraDeck = new BatchGetItemCommand(extraDeckParams);
-  const getSideDeck = new BatchGetItemCommand(sideDeckParams);
-
   let fullDeck = {
-    main:[],
-    extra:[],
-    side:[],
+    main: [],
+    extra: [],
+    side: []
   };
 
-  // Execute the BatchGetItem command
-  const loadedMainDeck = await client.send(getMainDeck)
-    .then(data => data.Responses.YGOCardDatabase.map(card => card));
+  // Fetching main deck
+  for (const id of singlesDeckIds.main) {
+    const item = await getItem("YGOCardDatabase", id);
+    if (item) {
+      fullDeck.main.push(item);
+    }
+  }
 
-  const loadedExtraDeck = await client.send(getExtraDeck)
-    .then(data => data.Responses.YGOCardDatabase.map(card => card));
+  // Fetching extra deck
+  for (const id of singlesDeckIds.extra) {
+    const item = await getItem("YGOCardDatabase", id);
+    if (item) {
+      fullDeck.extra.push(item);
+    }
+  }
 
-  const loadedSideDeck =  await client.send(getSideDeck)
-    .then(data => data.Responses.YGOCardDatabase.map(card => card));
-  fullDeckIds.main.forEach(cardId => {
-    const idMatch = loadedMainDeck.find(card => card.card_id.N === cardId);
-    if (idMatch) {
-      fullDeck.main.push(idMatch);
+  // Fetching side deck
+  for (const id of singlesDeckIds.side) {
+    const item = await getItem("YGOCardDatabase", id);
+    if (item) {
+      fullDeck.side.push(item);
     }
-  });
-  fullDeckIds.extra.forEach(cardId => {
-    const idMatch = loadedExtraDeck.find(card => card.card_id.N === cardId);
-    if (idMatch) {
-      fullDeck.extra.push(idMatch);
-    }
-  });
-  fullDeckIds.side.forEach(cardId => {
-    const idMatch = loadedSideDeck.find(card => card.card_id.N === cardId);
-    if (idMatch) {
-      fullDeck.side.push(idMatch);
-    }
-  });
+  }
 
   return fullDeck;
 };
+
+const getItem = async (tableName, cardId) => {
+  const params = {
+    TableName: tableName,
+    Key: {
+      card_id: { S: cardId.toString() }
+    }
+  };
+
+  try {
+    const { Item } = await client.send(new GetItemCommand(params));
+    return Item;
+  } catch (error) {
+    console.error(`Failed to retrieve item with card_id ${cardId}:`, error);
+    return null;
+  }
+};
+
 
 export const fillForm = async (deckList) => {
   try {
@@ -218,7 +189,6 @@ export const fillForm = async (deckList) => {
       if (!filledOutMonsterCards.includes(monsterCard.name.S)) {
 
         const monsterCount = countOccurrences(monsterCards, monsterCard);
-        console.log(monsterCard.name.S, monsterCount, form.getTextField(`Monster ${monsterCardNumber}`).getName(), form.getTextField(`Monster Card ${monsterCardNumber} Count`)),
         form.getTextField(`Monster ${monsterCardNumber}`).setText(monsterCard.name.S);
 
         form.getTextField(`Monster Card ${monsterCardNumber} Count`).setText(`${monsterCount}`);
@@ -265,7 +235,6 @@ export const fillForm = async (deckList) => {
     form.getTextField("Total Trap Cards").setText(`${trapCards.length}`);
     form.getTextField("Total Extra Deck").setText(`${resolvedDeckList.extra.length}`);
     form.getTextField("Total Side Deck").setText(`${resolvedDeckList.side.length}`);
-
     const pdfBytes = await pdfDoc.save();
 
     return pdfBytes;
