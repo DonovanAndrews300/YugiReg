@@ -10,17 +10,9 @@ export default function Faq() {
         <div>
           <h3 className='question-header'>Why don't some of my cards appear in the completed form?</h3>
           <p className='answer'>
-          This issue arises because Yugi-Reg may not fully support or recognize alternative art cards at the moment.
+          Missing cards may occur because Yugi-Reg may not fully support or recognize alternative art cards.
           </p>
         </div>
-
-        <div>
-          <h3 className='question-header'>What happens if my decklist exceeds the allotted slots?</h3>
-          <p className='answer'>
-          If your decklist exceeds the allocated slots, Yugi-Reg will create new card form slots to accommodate the additional cards.
-          </p>
-        </div>
-
         <div>
           <h3 className='question-header'>How can I obtain a YDK file of my deck?</h3>
           <p className='answer'>
