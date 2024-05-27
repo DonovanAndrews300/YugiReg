@@ -1,22 +1,40 @@
-
-.container {
-  width: 100%;
-  height: 200px; 
-  border: 2px dashed #ccc; 
+.layout-container {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
+  justify-content: space-between; 
+  align-items: start; 
+  padding: 10px;
 }
 
 
-.container input {
-  width: 100%; 
-  height: 100%; 
-  opacity: 0; 
-  position: absolute;
-  top: 0;
-  left: 0;
+.text-inputs-container {
+  display: flex;
+  flex-direction: column;
+  margin-right: 20px; 
 }
 
+.input, .text-inputs-container .input {
+  margin-bottom: 10px; 
+  width: 200px; 
+}
+
+.buttons-container {
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start;
+}
+
+button {
+  margin-bottom: 10px;
+}
+
+
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+
+  .text-inputs-container, .buttons-container {
+    width: 100%;
+    margin-right: 0;
+  }
+}
