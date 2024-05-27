@@ -17,7 +17,6 @@ export default function FileUploader() {
   };
   const onDrop = useCallback((acceptedFiles: any[]) => {
     const isYdk = acceptedFiles.length && acceptedFiles[0].name.endsWith('.ydk');
-
     if (isYdk) {
       setFile(acceptedFiles[0]);
     } else {
@@ -30,7 +29,6 @@ export default function FileUploader() {
   const removeFile = () => {
     setFile(null);
   };
-
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -46,39 +44,44 @@ export default function FileUploader() {
   return (
     <div className="layout-container">
       <div className="text-inputs-container">
-        <label>
-          First Name:
-          <input
-            type="text"
-            className="input"
-            name="firstName"
-            value={firstName}
-            onChange={handleInputChange}
-            placeholder="Enter your first name"
-          />
-        </label>
-        <label>
-          Last Name:
-          <input
-            type="text"
-            className="input"
-            name="lastName"
-            value={lastName}
-            onChange={handleInputChange}
-            placeholder="Enter your last name"
-          />
-        </label>
-        <label>
-          Konami ID:
-          <input
-            type="text"
-            className="input"
-            name="konamiId"
-            value={konamiId}
-            onChange={handleInputChange}
-            placeholder="Enter your Konami ID"
-          />
-        </label>
+        <div className="name-inputs">
+          <label>
+            First Name:
+            <input
+              type="text"
+              className="input"
+              name="firstName"
+              value={firstName}
+              onChange={handleInputChange}
+              placeholder="Enter your first name"
+            />
+          </label>
+          <label>
+            Last Name:
+            <input
+              type="text"
+              className="input"
+              name="lastName"
+              value={lastName}
+              onChange={handleInputChange}
+              placeholder="Enter your last name"
+            />
+          </label>
+        </div>
+        <div className="konami-input">
+          <label>
+            Konami ID:
+            <input
+              type="text"
+              className="input"
+              name="konamiId"
+              value={konamiId}
+              onChange={handleInputChange}
+              maxLength={10}
+              placeholder="Enter your Konami ID"
+            />
+          </label>
+        </div>
       </div>
       <div>
         <div {...getRootProps({ className: "container" })}>
