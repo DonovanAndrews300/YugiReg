@@ -1,6 +1,6 @@
 # Yu-Gi-Oh! Konami Registration Form Autofill
 
-This React application helps you fill out Yu-Gi-Oh! Konami registration forms using YDK files. Upload your YDK file, and the app will automatically populate the necessary fields in the registration form.This is a faster way to fill out these forms as card names can be quite long and are often mispelled.
+This React application helps you fill out Yu-Gi-Oh! Konami registration forms using YDK files. Upload your YDK file, and the app will automatically populate the necessary fields in the registration form.This is a faster way to fill out these forms as card names can be quite long and are often misspelled.
 
 ## Features
 
@@ -19,31 +19,6 @@ git clone https://github.com/your-username/your-repo-name.git
 
 There is a demo ydk file within the client folder of the project that you can use to test out how the application works.
 
-## File Structure
-
-```
-├── public
-│ ├── index.html
-│ └── ...
-├── src
-│ ├── components
-│ │ ├── Faq
-│ │ │ └── Faq.tsx
-│ │ ├── FileUploader
-│ │ │ └── FileUploader.tsx
-│ │ └── ...
-│ ├── Instructions
-│ │ └── Instructions.tsx
-│ ├── utils
-│ │ └── uploadFile.ts
-│ ├── App.tsx
-│ ├── index.tsx
-│ └── ...
-├── .eslint.config.js
-├── .gitignore
-├── package.json
-└── README.md
-```
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
