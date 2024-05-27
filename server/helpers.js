@@ -1,5 +1,5 @@
 
-import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL } from "./constants";
+import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL } from "./constants.js";
 import { PDFDocument }  from "pdf-lib";
 import { readFile } from "fs/promises";
 import axios from "axios";
