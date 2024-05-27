@@ -1,15 +1,12 @@
 
-import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL } from './constants';
+import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL } from "./constants";
 import { PDFDocument }  from "pdf-lib";
 import { readFile } from "fs/promises";
 import axios from "axios";
-import { DynamoDBClient, GetItemCommand, PutItemCommand} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 const client = new DynamoDBClient({
   region: AWS_REGION,
 });
-
-
-
 
 //Function to update DynamoDb with new cards
 export const writeFromYGOPRO = async () => {
@@ -30,8 +27,8 @@ const putItem = async (card) => {
     Item: {
       card_id: { S: card.id.toString() }, // Make sure IDs are strings
       name: { S: card.name },             // Assuming 'name' is a required attribute
-      id:{S:card.id.toString() },
-      type:{S:card.type},
+      id:{ S:card.id.toString() },
+      type:{ S:card.type },
     },
     ConditionExpression: "attribute_not_exists(card_id)" // Only put if card_id does not exist
 
@@ -98,7 +95,6 @@ export const getYdkIds = async (ydkFile) => {
   return cardIds;
 };
 
-
 export const getDeck = async (ydk) => {
   const singlesDeckIds = await getUniqueYdkIds(ydk);
   let fullDeck = {
@@ -144,15 +140,16 @@ const getItem = async (tableName, cardId) => {
 
   try {
     const { Item } = await client.send(new GetItemCommand(params));
+
     return Item;
   } catch (error) {
     console.error(`Failed to retrieve item with card_id ${cardId}:`, error);
+
     return null;
   }
 };
 
-
-export const fillForm = async (deckList,playerInfo) => {
+export const fillForm = async (deckList, playerInfo) => {
   try {
     const pdfDoc = await PDFDocument.load(
       await readFile("KDE_DeckList.pdf"));
@@ -168,10 +165,10 @@ export const fillForm = async (deckList,playerInfo) => {
 
       return counter;
     };
-    const {firstName, lastName, konamiId} = playerInfo;
-    form.getTextField('First  Middle Names').setText(firstName)
-    form.getTextField('Last Names').setText(lastName)
-    form.getTextField('CARD GAME ID').setText(konamiId)
+    const { firstName, lastName, konamiId } = playerInfo;
+    form.getTextField("First  Middle Names").setText(firstName);
+    form.getTextField("Last Names").setText(lastName);
+    form.getTextField("CARD GAME ID").setText(konamiId);
     const monsterCards = resolvedDeckList.main.filter((card) => card.type.S.includes("Monster"));
     let filledOutMonsterCards = [];
     let monsterCardNumber = 1;
@@ -244,4 +241,4 @@ export const fillForm = async (deckList,playerInfo) => {
   catch (error) {
     console.log(error);
   }
-}
+};
