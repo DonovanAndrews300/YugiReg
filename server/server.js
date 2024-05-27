@@ -29,9 +29,14 @@ if(req.file.size > MAX_FILE_SIZE) {
 }
   res.setHeader("Content-Type", "application/octet-stream");
   res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
-  const file = req.file;
+  const file = req.file; 
+  const playerInfo = {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    konamiId: req.body.konamiId
+  }
   const loadedDeck = await getDeck(file.buffer);
-  const filledForm = await fillForm(loadedDeck);
+  const filledForm = await fillForm(loadedDeck,playerInfo);
   res.send(Buffer.from(filledForm));
 };
 

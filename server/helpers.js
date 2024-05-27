@@ -152,15 +152,12 @@ const getItem = async (tableName, cardId) => {
 };
 
 
-export const fillForm = async (deckList) => {
+export const fillForm = async (deckList,playerInfo) => {
   try {
     const pdfDoc = await PDFDocument.load(
       await readFile("KDE_DeckList.pdf"));
     const resolvedDeckList = await deckList;
     const form = pdfDoc.getForm();
-    // const firstAndMiddleNameField = form.getTextField('First  Middle Names')
-    // const lastNameField = form.getTextField('Last Names')
-    // const konamiIdField = form.getTextField('CARD GAME ID')
     const countOccurrences = (array, element) => {
       let counter = 0;
       array.forEach(item => {
@@ -171,6 +168,10 @@ export const fillForm = async (deckList) => {
 
       return counter;
     };
+    const {firstName, lastName, konamiId} = playerInfo;
+    form.getTextField('First  Middle Names').setText(firstName)
+    form.getTextField('Last Names').setText(lastName)
+    form.getTextField('CARD GAME ID').setText(konamiId)
     const monsterCards = resolvedDeckList.main.filter((card) => card.type.S.includes("Monster"));
     let filledOutMonsterCards = [];
     let monsterCardNumber = 1;
