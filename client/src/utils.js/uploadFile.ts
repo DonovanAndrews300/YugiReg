@@ -18,7 +18,7 @@ export const uploadFile = async (props:UploadFileProps ): Promise<void> => {
     formData.append('firstName',firstName);
     formData.append('lastName',lastName);
     formData.append('konamiId', konamiId);
-    const response = await fetch('https://yugireg.netlify.app/', {
+    const response = await fetch('https://yugireg-45086852d588.herokuapp.com/', {
       method: 'POST',
       body: formData,
     });
