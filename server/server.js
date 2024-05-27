@@ -2,6 +2,8 @@ import express from "express";
 import cors from 'cors';
 import multer from "multer"; 
 import { config } from 'dotenv';
+import { DEFAULT_PORT, MAX_FILE_SIZE} from "./constants.js"
+
 config();
 import { getDeck, fillForm } from "./helpers.js";
 
@@ -10,7 +12,7 @@ import { getDeck, fillForm } from "./helpers.js";
 
 const app = express();
 app.use(cors());
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || DEFAULT_PORT;
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
 });
@@ -22,7 +24,6 @@ const handlePostYDKRoute = async (req, res) => {
     res.send("no ydk");
     return; // make sure to return here to avoid setting headers after sending response
   }
-  const MAX_FILE_SIZE = 1 * 1024 * 1024; //1mb
 if(req.file.size > MAX_FILE_SIZE) {
   res.send("max file size exceeded");
   return

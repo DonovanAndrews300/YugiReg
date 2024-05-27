@@ -1,11 +1,11 @@
 
-import {  BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL } from './constants';
 import { PDFDocument }  from "pdf-lib";
 import { readFile } from "fs/promises";
 import axios from "axios";
 import { DynamoDBClient, GetItemCommand, PutItemCommand} from "@aws-sdk/client-dynamodb";
 const client = new DynamoDBClient({
-  region: "us-east-1",
+  region: AWS_REGION,
 });
 
 
@@ -14,7 +14,7 @@ const client = new DynamoDBClient({
 //Function to update DynamoDb with new cards
 export const writeFromYGOPRO = async () => {
   // Fetch cards data from the API
-  const response = await axios.get("https://db.ygoprodeck.com/api/v7/cardinfo.php");
+  const response = await axios.get(YGOPRO_API_URL);
   const allCards = response.data.data;
 
   console.log("Processing cards...");
@@ -26,7 +26,7 @@ export const writeFromYGOPRO = async () => {
 
 const putItem = async (card) => {
   const params = {
-    TableName: "YGOCardDatabase",
+    TableName: DYNAMODB_TABLE_NAME,
     Item: {
       card_id: { S: card.id.toString() }, // Make sure IDs are strings
       name: { S: card.name },             // Assuming 'name' is a required attribute
@@ -109,7 +109,7 @@ export const getDeck = async (ydk) => {
 
   // Fetching main deck
   for (const id of singlesDeckIds.main) {
-    const item = await getItem("YGOCardDatabase", id);
+    const item = await getItem(DYNAMODB_TABLE_NAME, id);
     if (item) {
       fullDeck.main.push(item);
     }
@@ -117,7 +117,7 @@ export const getDeck = async (ydk) => {
 
   // Fetching extra deck
   for (const id of singlesDeckIds.extra) {
-    const item = await getItem("YGOCardDatabase", id);
+    const item = await getItem(DYNAMODB_TABLE_NAME, id);
     if (item) {
       fullDeck.extra.push(item);
     }
@@ -125,7 +125,7 @@ export const getDeck = async (ydk) => {
 
   // Fetching side deck
   for (const id of singlesDeckIds.side) {
-    const item = await getItem("YGOCardDatabase", id);
+    const item = await getItem(DYNAMODB_TABLE_NAME, id);
     if (item) {
       fullDeck.side.push(item);
     }
