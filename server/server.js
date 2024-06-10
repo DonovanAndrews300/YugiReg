@@ -17,27 +17,36 @@ app.listen(port, () => {
 const upload = multer({ storage: multer.memoryStorage() });
 
 const handlePostYDKRoute = async (req, res) => {
-  if (!req.file) {
-    res.send("no ydk");
-
-    return; // make sure to return here to avoid setting headers after sending response
+  try {
+    if (!req.file) {
+      res.send("no ydk");
+  
+      return; // make sure to return here to avoid setting headers after sending response
+    }
+    if (req.file.size > MAX_FILE_SIZE) {
+      res.send("max file size exceeded");
+  
+      return;
+    }
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
+    const file = req.file;
+    const playerInfo = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      konamiId: req.body.konamiId
+    };
+    const loadedDeck = await getDeck(file.buffer);
+    const filledForm = await fillForm(loadedDeck, playerInfo);
+    res.send(Buffer.from(filledForm));
   }
-  if (req.file.size > MAX_FILE_SIZE) {
-    res.send("max file size exceeded");
-
-    return;
+  catch (err) {
+    res.status(500)
+    console.log(err)
+    res.json( {
+          message: err.message
+  });
   }
-  res.setHeader("Content-Type", "application/octet-stream");
-  res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
-  const file = req.file;
-  const playerInfo = {
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    konamiId: req.body.konamiId
-  };
-  const loadedDeck = await getDeck(file.buffer);
-  const filledForm = await fillForm(loadedDeck, playerInfo);
-  res.send(Buffer.from(filledForm));
 };
 
 const handleDefaultGetRoute = (req, res) => {

@@ -24,7 +24,10 @@ export const uploadFile = async (props:UploadFileProps ): Promise<void> => {
     });
 
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      const error = await response.text(); // Optionally read the response body for error details
+      const parsedError = JSON.parse(error)
+      alert(`File upload failed: ${parsedError.message}`)
+      throw new Error(`File upload failed with status ${response.status}: ${parsedError.message}`);
     }
 
     console.log('File uploaded successfully:', response);

@@ -1,4 +1,4 @@
-import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL } from "./constants.js";
+import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS } from "./constants.js";
 import { PDFDocument } from "pdf-lib";
 import { readFile } from "fs/promises";
 import axios from "axios";
@@ -139,11 +139,16 @@ export const fillForm = async (deckList, playerInfo) => {
     const countOccurrences = (array, element) => array.filter(item => item === element).length;
 
     const fillDeck = (deckType, deckCards, filledOutCards, cardNumber) => {
+
+    if ((deckType === "Monster" || deckType === "Spell" || deckType=== "Trap") &&  cardNumber < MAX_MAIN_DECK_TYPE_CARDS) {
+      throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
+    }
       deckCards.forEach((card) => {
         if (!filledOutCards.includes(card.name.S)) {
           const count = countOccurrences(deckCards, card);
           form.getTextField(`${deckType} ${cardNumber}`).setText(card.name.S);
           form.getTextField(`${deckType} Card ${cardNumber} Count`).setText(`${count}`);
+          //this is to avoid adding duplicates
           filledOutCards.push(card.name.S);
           cardNumber++;
         }
@@ -167,5 +172,6 @@ export const fillForm = async (deckList, playerInfo) => {
 
   } catch (error) {
     console.error("Error filling form:", error);
+    throw new Error(error)
   }
 };
