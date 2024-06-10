@@ -1,24 +1,22 @@
-
+/* Global Styles */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #1a1a2e;
   background-image: url('patterns.png');
-  color: #fff; 
+  color: #fff;
 }
 
 main {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-
   background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   position: relative;
 }
-
 
 .file-uploader {
   text-align: center;
@@ -30,7 +28,6 @@ main {
   color: #007BFF;
   margin-bottom: 10px;
 }
-
 
 .instructions-container {
   display: flex;
@@ -45,7 +42,6 @@ main {
   margin-left: 10px;
 }
 
-
 .qa-container {
   margin-top: 20px;
 }
@@ -58,9 +54,10 @@ main {
 
 .question-header {
   font-size: 18px;
-  color: #fff; 
+  color: #fff;
   margin-bottom: 10px;
 }
+
 .file-uploader-container {
   border: 2px solid #fff;
   padding: 20px;
@@ -73,18 +70,18 @@ main {
   margin-bottom: 20px;
 }
 
-
 .footer {
   text-align: center;
   font-size: 14px;
-  color: #ccc; 
+  color: #ccc;
   margin-top: 20px;
   padding-top: 10px;
-  border-top: 1px solid #444; 
+  border-top: 1px solid #444;
 }
+
 .home-banner {
-  background-color: #007BFF; 
-  color: #fff; 
+  background-color: #007BFF;
+  color: #fff;
   text-align: center;
   padding: 20px 0;
 }
@@ -92,4 +89,95 @@ main {
 .home-banner h1 {
   font-size: 36px;
   margin: 0;
+}
+
+/* Component Specific Styles */
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.inputs-upload-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 20px; /* Adds space between the input section and the upload section */
+}
+
+.inputs-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Allows the input container to take the remaining space */
+}
+
+.name-inputs, .konami-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  margin-bottom: 15px;
+  padding: 8px;
+  width: 100%; /* Ensures the inputs take full width of their container */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0; /* Prevents the upload container from shrinking */
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  padding: 20px;
+  cursor: pointer;
+  width: 250px;
+}
+
+.file-name {
+  margin-top: 10px;
+}
+
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+button {
+  margin-bottom: 10px;
+  cursor: pointer;
+  padding: 8px 16px;
+}
+
+@media (max-width: 768px) {
+  .inputs-upload-container {
+    flex-direction: column;
+  }
+
+  .inputs-container {
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+
+  .dropzone {
+    width: 100%;
+  }
+
+  .input {
+    width: auto;
+  }
 }
