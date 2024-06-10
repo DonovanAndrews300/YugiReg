@@ -11,8 +11,8 @@ export const uploadFile = async (props:UploadFileProps ): Promise<void> => {
     const {file,firstName,lastName,konamiId} = props;
     const MAX_FILE_SIZE = 1 * 1024 * 1024; //1mb
     if(file.size > MAX_FILE_SIZE){
-       throw new  Error("Uploaded file exceeds maximum file size")
-      }
+      throw new  Error("Uploaded file exceeds maximum file size");
+    }
     const formData = new FormData();
     formData.append('file', file);
     formData.append('firstName',firstName);
@@ -25,8 +25,8 @@ export const uploadFile = async (props:UploadFileProps ): Promise<void> => {
 
     if (!response.ok) {
       const error = await response.text(); // Optionally read the response body for error details
-      const parsedError = JSON.parse(error)
-      alert(`File upload failed: ${parsedError.message}`)
+      const parsedError = JSON.parse(error);
+      alert(`File upload failed: ${parsedError.message}`);
       throw new Error(`File upload failed with status ${response.status}: ${parsedError.message}`);
     }
 
