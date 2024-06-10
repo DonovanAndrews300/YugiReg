@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-import { uploadFile } from '../../utils.js/uploadFile';
+import { uploadFile } from '../../utils/uploadFile';
 
 export default function FileUploader() {
   const [file, setFile] = useState<File | null>(null);
@@ -28,7 +28,7 @@ export default function FileUploader() {
     if (isYdk) {
       setFile(acceptedFiles[0]);
     } else {
-      console.log("Incorrect file type");
+      alert("Incorrect file type");
     }
   }, []);
 
@@ -94,7 +94,7 @@ export default function FileUploader() {
         </div>
         <div className="upload-container">
           <div className="dropzone" {...getRootProps()}>
-            <input {...getInputProps()} />
+            <input data-testid="dropzone-input" {...getInputProps()} />
             {isDragActive ? <p>Release To Upload</p> : <p>Upload YDK File</p>}
             {file?.name && (
               <p className="file-name">{file.name}</p>
