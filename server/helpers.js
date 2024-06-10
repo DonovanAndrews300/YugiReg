@@ -44,6 +44,7 @@ const putItem = async (card) => {
 // Helper function to parse YDK file
 const parseYdkFile = (ydkFile) => {
   const data = Buffer.from(ydkFile, "utf-8");
+
   return data.toString("utf-8").trim().split("\n");
 };
 
@@ -117,9 +118,11 @@ const getItem = async (tableName, cardId) => {
 
   try {
     const { Item } = await client.send(new GetItemCommand(params));
+
     return Item;
   } catch (error) {
     console.error(`Failed to retrieve item with card_id ${cardId}:`, error);
+
     return null;
   }
 };
@@ -140,9 +143,9 @@ export const fillForm = async (deckList, playerInfo) => {
 
     const fillDeck = (deckType, deckCards, filledOutCards, cardNumber) => {
 
-    if ((deckType === "Monster" || deckType === "Spell" || deckType=== "Trap") &&  cardNumber < MAX_MAIN_DECK_TYPE_CARDS) {
-      throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
-    }
+      if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") &&  cardNumber < MAX_MAIN_DECK_TYPE_CARDS) {
+        throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
+      }
       deckCards.forEach((card) => {
         if (!filledOutCards.includes(card.name.S)) {
           const count = countOccurrences(deckCards, card);
@@ -168,10 +171,11 @@ export const fillForm = async (deckList, playerInfo) => {
     form.getTextField("Total Side Deck").setText(`${resolvedDeckList.side.length}`);
 
     const pdfBytes = await pdfDoc.save();
+
     return pdfBytes;
 
   } catch (error) {
     console.error("Error filling form:", error);
-    throw new Error(error)
+    throw new Error(error);
   }
 };

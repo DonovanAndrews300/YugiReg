@@ -20,12 +20,12 @@ const handlePostYDKRoute = async (req, res) => {
   try {
     if (!req.file) {
       res.send("no ydk");
-  
+
       return; // make sure to return here to avoid setting headers after sending response
     }
     if (req.file.size > MAX_FILE_SIZE) {
       res.send("max file size exceeded");
-  
+
       return;
     }
     res.setHeader("Content-Type", "application/octet-stream");
@@ -41,11 +41,11 @@ const handlePostYDKRoute = async (req, res) => {
     res.send(Buffer.from(filledForm));
   }
   catch (err) {
-    res.status(500)
-    console.log(err)
-    res.json( {
-          message: err.message
-  });
+    res.status(500);
+    console.log(err);
+    res.json({
+      message: err.message
+    });
   }
 };
 
