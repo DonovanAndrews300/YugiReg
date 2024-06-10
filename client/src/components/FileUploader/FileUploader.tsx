@@ -8,11 +8,18 @@ export default function FileUploader() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [konamiId, setKonamiId] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
-    if (file) {
+    try {
+         if (file) {
+      setLoading(true);
       await uploadFile({ file, firstName, lastName, konamiId });
+      setLoading(false);
       console.log('First Name:', firstName, 'Last Name:', lastName, 'Konami ID:', konamiId);
+    }
+    } catch{
+      setLoading(false);
     }
   };
 
@@ -99,7 +106,7 @@ export default function FileUploader() {
                 <button type="button" onClick={removeFile}>
                   Remove
                 </button>
-                <button type="button" onClick={onSubmit}>
+                <button type="button" disabled={loading} onClick={onSubmit}>
                   Submit
                 </button>
               </>
