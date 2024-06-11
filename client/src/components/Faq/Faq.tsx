@@ -10,13 +10,13 @@ export default function Faq() {
         <div>
           <h3 className='question-header'>Why don't some of my cards appear in the completed form?</h3>
           <p className='answer'>
-          Missing cards may occur because Yugi-Reg may not fully support or recognize alternative art cards.
+          Missing cards may occur because alternate card art is not currently supported.
           </p>
         </div>
         <div>
           <h3 className='question-header'>How can I obtain a YDK file of my deck?</h3>
           <p className='answer'>
-          You can obtain a YDK file of your deck by using a deck exporter. For Dueling Nexus, I recommend using this Chrome extension: [Dueling Nexus Deck Exporter](https://chrome.google.com/webstore/detail/duelingnexus-deck-exporte/aaloejogbofkmmonaddiaogjjjdjlpcd).
+          You can obtain a YDK file of your deck by using a deck exporter. For Dueling Nexus, I recommend using this Chrome extension: [<a href="https://chrome.google.com/webstore/detail/duelingnexus-deck-exporte/aaloejogbofkmmonaddiaogjjjdjlpcd">Dueling Nexus Deck Exporter</a>].
           </p>
         </div>
       </div>
