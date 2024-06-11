@@ -1,33 +1,22 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor} from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import FileUploader from '../components/FileUploader/FileUploader'
-import { uploadFile } from '../utils/uploadFile';
+import FileUploader from '../components/FileUploader/FileUploader';
+import { toast } from 'react-toastify';
 
-
-jest.mock('../utils/uploadFile.ts');
 describe('FileUploader', () => {
+  global.fetch = jest.fn(); // Define global fetch mock
 
-    const mockFile = new File(['dummy content'], 'example.ydk', {type: 'application/octet-stream'});
-    const props = {
-        file:mockFile,
-        firstName: 'John',
-        lastName: 'Doe',
-        konamiId: '1234567890',
-    };
+  const mockFile = new File(['dummy content'], 'example.ydk', { type: 'application/octet-stream' });
 
-  beforeAll(() => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        blob: jest.fn().mockResolvedValue(new Blob()),
-      })
-    );
-       
-    (uploadFile).mockResolvedValue(Promise.resolve());
-    jest.clearAllMocks(); 
+  beforeEach(() => {
+    fetch.mockClear();
+    jest.resetAllMocks();
+    global.URL.createObjectURL = jest.fn();
+    global.URL.revokeObjectURL = jest.fn();
+
+    toast.dismiss(); // Clear any previous toasts to avoid interference between tests
   });
-
 
 
     test('Renders component when given props', () => {
@@ -39,19 +28,63 @@ describe('FileUploader', () => {
     })
     test('Wont upload invalid file type', async () => {
         render(<FileUploader />);
-
-        const input = screen.getByText("Upload YDK File").parentElement.querySelector('input');
+        const input = screen.getByText('Upload YDK File').parentElement.querySelector('input');
         const invalidFile = new File(['dummy content'], 'example.txt', { type: 'text/plain' });
-    
         fireEvent.change(input, { target: { files: [invalidFile] } });
-    
         await waitFor(() => {
           expect(screen.queryByText('example.txt')).not.toBeInTheDocument();
         });
     })
-    test('Displays correct error if too many monster cards', () => {})
-    test('Displays correct error if too many spell cards', () => {})
-    test('Displays correct error if too many trap cards', () => {})
-    test('Doesnt display error for success', () => {})
-    test('Displays error for file being too large', () => {})
+  test('Displays error message is promise rejects', async () => {
+    fetch.mockRejectedValueOnce({
+      text: () => Promise.resolve(),
+      message: "Exceeds the maximum allowed Monster cards."
     });
+
+    render(<FileUploader />);
+
+    const input = screen.getByTestId('dropzone-input');
+
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [mockFile] } });
+    });
+
+    fireEvent.click(screen.getByText('Submit'));
+
+    await waitFor(() => expect(screen.getByText(/Uploading file.../i)).toBeInTheDocument());
+
+    await waitFor(() => {
+      expect(screen.getByText(/File upload failed 🤯: Exceeds the maximum allowed Monster cards./i)).toBeInTheDocument();
+    });
+  });
+
+  test('Displays success message and downloads file with promise resolution', async () => {
+    global.URL.createObjectURL.mockReturnValue('blob:http://localhost/some-blob-url');
+    fetch.mockResolvedValueOnce({
+      ok: true, 
+     blob: () => "blob",
+      json: async () => ({
+        message: 'File uploaded successfully',
+      
+      }),
+    });
+
+    render(<FileUploader />);
+
+    const input = screen.getByTestId('dropzone-input');
+
+    await act(async () => {
+      fireEvent.change(input, { target: { files: [mockFile] } });
+    });
+
+    fireEvent.click(screen.getByText('Submit'));
+
+    await waitFor(() => expect(screen.getByText(/Uploading file.../i)).toBeInTheDocument());
+
+    await waitFor(() => {
+      expect(screen.getByText(/File uploaded successfully 👌/i)).toBeInTheDocument();
+    });
+  });
+
+  test('Displays error for file being too large', () => {});
+});
