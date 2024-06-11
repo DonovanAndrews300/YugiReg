@@ -141,17 +141,18 @@ export const fillForm = async (deckList, playerInfo) => {
 
     const countOccurrences = (array, element) => array.filter(item => item === element).length;
 
-    const fillDeck = (deckType, deckCards, filledOutCards, cardNumber) => {
 
-      if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") &&  cardNumber > MAX_MAIN_DECK_TYPE_CARDS) {
-        throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
-      }
+    const fillDeck = (deckType, deckCards, filledOutCards, cardNumber) => {
       deckCards.forEach((card) => {
+        if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") && cardNumber > MAX_MAIN_DECK_TYPE_CARDS) {
+          throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
+        }
+    
         if (!filledOutCards.includes(card.name.S)) {
           const count = countOccurrences(deckCards, card);
           form.getTextField(`${deckType} ${cardNumber}`).setText(card.name.S);
           form.getTextField(`${deckType} Card ${cardNumber} Count`).setText(`${count}`);
-          //this is to avoid adding duplicates
+          // This is to avoid adding duplicates
           filledOutCards.push(card.name.S);
           cardNumber++;
         }
