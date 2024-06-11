@@ -11,6 +11,7 @@ export default function FileUploader() {
   const [lastName, setLastName] = useState('');
   const [konamiId, setKonamiId] = useState('');
   const [loading, setLoading] = useState(false);
+
   const onSubmit = async () => {
     if (file) {
       setLoading(true);
@@ -24,8 +25,18 @@ export default function FileUploader() {
           success: 'File uploaded successfully 👌',
           error: {
             render({ data }) {
-              // You can access the error message from data
-              return 'File upload failed 🤯:'+data;
+              let errorMessage = 'File upload failed 🤯: ';
+              if (data.message) {
+                try {
+                  const errorData = JSON.parse(data.message);
+                  errorMessage += errorData.message || data.message;
+                } catch (e) {
+                  errorMessage += data.message;
+                }
+              } else {
+                errorMessage += data;
+              }
+              return errorMessage;
             }
           }
         }
