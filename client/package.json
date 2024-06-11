@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "jest-environment-jsdom": "^29.7.0",
-    "react-dropzone": "^14.2.3"
+    "react-dropzone": "^14.2.3",
+    "react-toastify": "^10.0.5"
   }
 }

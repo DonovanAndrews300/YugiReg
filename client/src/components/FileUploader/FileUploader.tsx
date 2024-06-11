@@ -2,6 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 import { uploadFile } from '../../utils/uploadFile';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function FileUploader() {
   const [file, setFile] = useState<File | null>(null);
@@ -9,17 +11,33 @@ export default function FileUploader() {
   const [lastName, setLastName] = useState('');
   const [konamiId, setKonamiId] = useState('');
   const [loading, setLoading] = useState(false);
-
   const onSubmit = async () => {
-    try {
-         if (file) {
+    if (file) {
       setLoading(true);
-      await uploadFile({ file, firstName, lastName, konamiId });
-      setLoading(false);
-      console.log('First Name:', firstName, 'Last Name:', lastName, 'Konami ID:', konamiId);
-    }
-    } catch{
-      setLoading(false);
+
+      const promise = uploadFile({ file, firstName, lastName, konamiId });
+
+      toast.promise(
+        promise,
+        {
+          pending: 'Uploading file...',
+          success: 'File uploaded successfully 👌',
+          error: {
+            render({ data }) {
+              // You can access the error message from data
+              return 'File upload failed 🤯:'+data;
+            }
+          }
+        }
+      );
+
+      try {
+        await promise;
+      } catch (err) {
+        console.error('File upload failed:', err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -28,7 +46,7 @@ export default function FileUploader() {
     if (isYdk) {
       setFile(acceptedFiles[0]);
     } else {
-      alert("Incorrect file type");
+      toast.error("Incorrect file type");
     }
   }, []);
 
@@ -114,6 +132,7 @@ export default function FileUploader() {
           </div>
         </div>
       </div>
+    <ToastContainer position="top-center"/>
     </div>
   );
 }
