@@ -24,9 +24,7 @@ const handlePostYDKRoute = async (req, res) => {
       return; // make sure to return here to avoid setting headers after sending response
     }
     if (req.file.size > MAX_FILE_SIZE) {
-      res.send("max file size exceeded");
-
-      return;
+      throw new Error("max file size exceeded");
     }
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
