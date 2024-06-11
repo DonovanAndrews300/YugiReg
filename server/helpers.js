@@ -150,8 +150,10 @@ export const fillForm = async (deckList, playerInfo) => {
     
         if (!filledOutCards.includes(card.name.S)) {
           const count = countOccurrences(deckCards, card);
+            //I call this cardString string but the extra deck and side deck fields have different card count names 
+            const cardString = deckType === 'Extra Deck' || deckType === 'Side Deck' ? '' : "Card "
           form.getTextField(`${deckType} ${cardNumber}`).setText(card.name.S);
-          form.getTextField(`${deckType} Card ${cardNumber} Count`).setText(`${count}`);
+          form.getTextField(`${deckType} ${cardString}${cardNumber} Count`).setText(`${count}`);
           // This is to avoid adding duplicates
           filledOutCards.push(card.name.S);
           cardNumber++;
