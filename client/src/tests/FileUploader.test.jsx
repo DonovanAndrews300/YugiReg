@@ -1,8 +1,10 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+
 import '@testing-library/jest-dom';
-import FileUploader from '../components/FileUploader/FileUploader';
 import { toast } from 'react-toastify';
+
+import FileUploader from '../components/FileUploader/FileUploader';
 
 describe('FileUploader', () => {
   global.fetch = jest.fn(); // Define global fetch mock
@@ -19,22 +21,22 @@ describe('FileUploader', () => {
   });
 
 
-    test('Renders component when given props', () => {
-        render(<FileUploader />);
-        expect( screen.getByText('First Name:')).toBeInTheDocument();
-        expect( screen.getByText('Last Name:')).toBeInTheDocument();
-        expect( screen.getByText('Konami ID:')).toBeInTheDocument();
-        expect( screen.getByText('Upload YDK File')).toBeInTheDocument();
-    })
-    test('Wont upload invalid file type', async () => {
-        render(<FileUploader />);
-        const input = screen.getByText('Upload YDK File').parentElement.querySelector('input');
-        const invalidFile = new File(['dummy content'], 'example.txt', { type: 'text/plain' });
-        fireEvent.change(input, { target: { files: [invalidFile] } });
-        await waitFor(() => {
-          expect(screen.queryByText('example.txt')).not.toBeInTheDocument();
-        });
-    })
+  test('Renders component when given props', () => {
+    render(<FileUploader />);
+    expect( screen.getByText('First Name:')).toBeInTheDocument();
+    expect( screen.getByText('Last Name:')).toBeInTheDocument();
+    expect( screen.getByText('Konami ID:')).toBeInTheDocument();
+    expect( screen.getByText('Upload YDK File')).toBeInTheDocument();
+  });
+  test('Wont upload invalid file type', async () => {
+    render(<FileUploader />);
+    const input = screen.getByText('Upload YDK File').parentElement.querySelector('input');
+    const invalidFile = new File(['dummy content'], 'example.txt', { type: 'text/plain' });
+    fireEvent.change(input, { target: { files: [invalidFile] } });
+    await waitFor(() => {
+      expect(screen.queryByText('example.txt')).not.toBeInTheDocument();
+    });
+  });
   test('Displays error message is promise rejects', async () => {
     fetch.mockRejectedValueOnce({
       text: () => Promise.resolve(),
@@ -62,7 +64,7 @@ describe('FileUploader', () => {
     global.URL.createObjectURL.mockReturnValue('blob:http://localhost/some-blob-url');
     fetch.mockResolvedValueOnce({
       ok: true, 
-     blob: () => "blob",
+      blob: () => "blob",
       json: async () => ({
         message: 'File uploaded successfully',
       

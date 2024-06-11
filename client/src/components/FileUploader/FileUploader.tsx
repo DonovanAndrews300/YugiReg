@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { ToastContainer, toast } from 'react-toastify';
 
 import { uploadFile } from '../../utils/uploadFile';
-import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function FileUploader() {
@@ -143,7 +143,7 @@ export default function FileUploader() {
           </div>
         </div>
       </div>
-    <ToastContainer position="top-center"/>
+      <ToastContainer position="top-center"/>
     </div>
   );
 }
