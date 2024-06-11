@@ -141,17 +141,16 @@ export const fillForm = async (deckList, playerInfo) => {
 
     const countOccurrences = (array, element) => array.filter(item => item === element).length;
 
-
     const fillDeck = (deckType, deckCards, filledOutCards, cardNumber) => {
       deckCards.forEach((card) => {
         if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") && cardNumber > MAX_MAIN_DECK_TYPE_CARDS) {
           throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
         }
-    
+
         if (!filledOutCards.includes(card.name.S)) {
           const count = countOccurrences(deckCards, card);
-            //I call this cardString string but the extra deck and side deck fields have different card count names 
-            const cardString = deckType === 'Extra Deck' || deckType === 'Side Deck' ? '' : "Card "
+          //I call this cardString string but the extra deck and side deck fields have different card count names
+          const cardString = deckType === "Extra Deck" || deckType === "Side Deck" ? "" : "Card ";
           form.getTextField(`${deckType} ${cardNumber}`).setText(card.name.S);
           form.getTextField(`${deckType} ${cardString}${cardNumber} Count`).setText(`${count}`);
           // This is to avoid adding duplicates
