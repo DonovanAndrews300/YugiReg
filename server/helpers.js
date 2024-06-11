@@ -143,7 +143,7 @@ export const fillForm = async (deckList, playerInfo) => {
 
     const fillDeck = (deckType, deckCards, filledOutCards, cardNumber) => {
 
-      if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") &&  cardNumber < MAX_MAIN_DECK_TYPE_CARDS) {
+      if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") &&  cardNumber > MAX_MAIN_DECK_TYPE_CARDS) {
         throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
       }
       deckCards.forEach((card) => {
