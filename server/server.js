@@ -17,6 +17,7 @@ app.listen(port, () => {
 const upload = multer({ storage: multer.memoryStorage() });
 
 const handlePostYDKRoute = async (req, res) => {
+  //turn this into a helper function isValidRequest
   try {
     if (!req.file) {
       res.send("no ydk");
