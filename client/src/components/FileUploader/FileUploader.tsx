@@ -5,6 +5,14 @@ import { ToastContainer, toast } from 'react-toastify';
 import { uploadFile } from '../../utils/uploadFile';
 import 'react-toastify/dist/ReactToastify.css';
 
+type Response = {
+  data: {
+  status: string;
+  message?: string;
+  }
+
+}
+
 export default function FileUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [firstName, setFirstName] = useState('');
@@ -24,7 +32,7 @@ export default function FileUploader() {
           pending: 'Uploading file...',
           success: 'File uploaded successfully 👌',
           error: {
-            render({ data }) {
+            render({ data }:Response) {
               let errorMessage = 'File upload failed 🤯: ';
               if (data.message) {
                 try {
@@ -44,7 +52,7 @@ export default function FileUploader() {
 
       try {
         await promise;
-      } catch (err) {
+      } catch (err:any) {
         console.error('File upload failed:', err.message);
       } finally {
         setLoading(false);
