@@ -11,7 +11,7 @@ export const writeFromYGOPRO = async () => {
   try {
     const response = await axios.get(YGOPRO_API_URL);
     const allCards = response.data.data;
-  
+
     console.log("Processing cards...");
     for (const card of allCards) {
       await putItem(card);
