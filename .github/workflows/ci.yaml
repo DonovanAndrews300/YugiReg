@@ -37,8 +37,5 @@ jobs:
       - name: Run ESLint for server
         run: cd server && npm run lint
 
-      - name: Run Tests for client
-        run: cd client npm test
-
-      - name: Run Tests for server
-        run: cd server npm test
+      - name: Run Tests
+        run: npm test
