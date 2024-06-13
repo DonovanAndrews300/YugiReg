@@ -16,7 +16,7 @@ export const writeFromYGOPRO = async () => {
     for (const card of allCards) {
       await putItem(card);
     }
-    console.log("All cards processed.");
+    console.log("All cards processed.")
   } catch (error) {
     console.error("Error fetching or processing cards:", error);
   }
