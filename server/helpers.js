@@ -26,7 +26,7 @@ export const isValidFile = (file) => {
   if (!file) {
     throw new Error("No file found");
   };
-  if (!file.name.endsWith('.ydk')) {
+  if (!file.name.endsWith(".ydk")) {
     throw new Error("Invalid file type");
   }
   if (file.size > MAX_FILE_SIZE) {
@@ -45,7 +45,6 @@ const putItem = async (card) => {
     },
     ConditionExpression: "attribute_not_exists(card_id)"
   };
-
 
   try {
     console.log(params);

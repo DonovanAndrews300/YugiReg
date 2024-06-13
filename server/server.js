@@ -17,14 +17,14 @@ app.listen(port, () => {
 const upload = multer({ storage: multer.memoryStorage() });
 
 const handlePostYDKRoute = async (req, res) => {
-  //turn this into a helper function isValidRequest  
+  //turn this into a helper function isValidRequest
   const file = req.file;
-  isValidFile(file)
+  isValidFile(file);
   try {
-   
+
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
-  
+
     const playerInfo = {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
