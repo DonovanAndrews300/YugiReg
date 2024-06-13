@@ -1,8 +1,9 @@
-import { fillForm, getUniqueYdkIds, writeFromYGOPRO } from "../helpers";
+import { fillForm, getUniqueYdkIds, isValidFile, writeFromYGOPRO } from "../helpers";
 import axios from "axios";
 import { PDFDocument } from 'pdf-lib';
 import { readFile } from 'fs/promises';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { MAX_FILE_SIZE } from "../constants";
 
 jest.mock('axios');
 jest.mock('pdf-lib');
@@ -13,9 +14,8 @@ describe('helpers', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         process.env.YGOPRO_API_URL = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
-                process.env.AWS_REGION = 'us-west-2';
+        process.env.AWS_REGION = 'us-west-2';
         process.env.DYNAMODB_TABLE_NAME = 'MockedTableName';
-
     });
 
     test('writeFromYGOPRO should fetch cards from API and store them in DynamoDB', async () => {
@@ -25,7 +25,7 @@ describe('helpers', () => {
 
         await writeFromYGOPRO();
 
-        expect(axios.get).toHaveBeenCalledWith(process.env.YGOPRO_API_URL);  // Assuming YGOPRO_API_URL is an environment variable
+        expect(axios.get).toHaveBeenCalledWith(process.env.YGOPRO_API_URL); 
         expect(putItemSpy).toHaveBeenCalled();
     });
 
@@ -59,4 +59,22 @@ describe('helpers', () => {
         expect(mockPdfDoc.getForm().getTextField).toHaveBeenCalledWith('First  Middle Names');
         expect(mockPdfDoc.getForm().getTextField('First  Middle Names').setText).toHaveBeenCalledWith(playerInfo.firstName);
     });
+
+    test('isValidFile should throw an error with no file', () => {
+        expect(() =>isValidFile()).toThrow("No file found")
+    })
+    test('isValidFile should throw an error when the file type is not ydk', () => {
+        const invalidFile = { name: 'test.txt', size: MAX_FILE_SIZE - 1 }; 
+        expect(() => isValidFile(invalidFile)).toThrow("Invalid file type");
+      });
+
+    it(' isValidFile should throw an error when the file size exceeds the maximum allowed size', () => {
+        const largeFile = { name: 'test.ydk', size: MAX_FILE_SIZE + 1 }; 
+        expect(() => isValidFile(largeFile)).toThrow("Max file size exceeded");
+      });
+    
+      it('isValidFile should return true for a valid file', () => {
+        const validFile = { name: 'test.ydk', size: MAX_FILE_SIZE - 1 };
+        expect(() => isValidFile(validFile)).not.toThrow();
+      });
 });
