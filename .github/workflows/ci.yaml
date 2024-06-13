@@ -23,11 +23,19 @@ jobs:
           node-version: '16'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install dependencies for client
+        working-directory: ./client
         run: npm install --force
 
-      - name: Run ESLint
-        run: npm run lint
+      - name: Install dependencies for server
+        working-directory: ./server
+        run: npm install --force
+
+      - name: Run ESLint for client
+        run: cd client && npm run lint --fix
+
+      - name: Run ESLint for server
+        run: cd server && npm run lint
 
       - name: Run Tests
         run: npm test
