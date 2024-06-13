@@ -1,7 +1,6 @@
 {
   "name": "YugiReg",
   "version": "1.0.0",
-  "type": "module",
   "description": "Project to automatically fill out Konami Yugioh tournament forms",
   "scripts": {
     "dev": "vite",
