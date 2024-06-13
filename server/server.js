@@ -5,7 +5,7 @@ import { config } from "dotenv";
 import { DEFAULT_PORT, MAX_FILE_SIZE } from "./constants.js";
 
 config();
-import { getDeck, fillForm } from "./helpers.js";
+import { getDeck, fillForm, isValidFile } from "./helpers.js";
 
 const app = express();
 app.use(cors());
@@ -17,19 +17,14 @@ app.listen(port, () => {
 const upload = multer({ storage: multer.memoryStorage() });
 
 const handlePostYDKRoute = async (req, res) => {
-  //turn this into a helper function isValidRequest
+  //turn this into a helper function isValidRequest  
+  const file = req.file;
+  isValidFile(file)
   try {
-    if (!req.file) {
-      res.send("no ydk");
-
-      return; // make sure to return here to avoid setting headers after sending response
-    }
-    if (req.file.size > MAX_FILE_SIZE) {
-      throw new Error("max file size exceeded");
-    }
+   
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
-    const file = req.file;
+  
     const playerInfo = {
       firstName: req.body.firstName,
       lastName: req.body.lastName,

@@ -1,4 +1,4 @@
-import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS } from "./constants.js";
+import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS, MAX_FILE_SIZE } from "./constants.js";
 import { PDFDocument } from "pdf-lib";
 import { readFile } from "fs/promises";
 import axios from "axios";
@@ -22,6 +22,18 @@ export const writeFromYGOPRO = async () => {
   }
 };
 
+export const isValidFile = (file) => {
+  if (!file) {
+    throw new Error("No file found");
+  };
+  if (!file.name.endsWith('.ydk')) {
+    throw new Error("Invalid file type");
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error("Max file size exceeded");
+  }
+};
+
 const putItem = async (card) => {
   const params = {
     TableName: DYNAMODB_TABLE_NAME,
@@ -33,6 +45,7 @@ const putItem = async (card) => {
     },
     ConditionExpression: "attribute_not_exists(card_id)"
   };
+
 
   try {
     console.log(params);
