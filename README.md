@@ -7,7 +7,7 @@ This React application helps you fill out Yu-Gi-Oh! Konami registration forms us
 - **File Upload**: Upload YDK files to autofill the registration form.
 - **Form Autofill**: Automatically fills in the form fields based on the uploaded YDK file data.
 - **Downloadable PDF**: Allows you to download the filled registration form as a PDF.
-- **(Coming soon)Banlist Validation: Will let the users know if they have banned cards in their filled decklist and which one's they are.
+- **(Coming soon) Banlist Validation**: Will let the users know if they have banned cards in their filled decklist and which one's they are.
 
 ## Installation
 
