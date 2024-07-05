@@ -4,7 +4,7 @@ import { readFile } from "fs/promises";
 import puppeteer from "puppeteer";
 import axios from "axios";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient, GetItemCommand} from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
 
 const client = new DynamoDBClient({ region: AWS_REGION });
 
