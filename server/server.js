@@ -2,10 +2,10 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import { config } from "dotenv";
-import { DEFAULT_PORT, MAX_FILE_SIZE } from "./constants.js";
+import { DEFAULT_PORT } from "./constants.js";
 
 config();
-import { getDeck, fillForm, isValidFile } from "./helpers.js";
+import { getDeck, fillForm, isValidFile, writeToFormatTable } from "./helpers.js";
 
 const app = express();
 app.use(cors());
@@ -15,13 +15,24 @@ app.listen(port, () => {
 });
 
 const upload = multer({ storage: multer.memoryStorage() });
-
 const handlePostYDKRoute = async (req, res) => {
   //turn this into a helper function isValidRequest
+<<<<<<< HEAD
   const file = req.file;
   isValidFile(file);
   try {
 
+=======
+  try {
+    if (!req.file) {
+      res.send("no ydk");
+
+      return; // make sure to return here to avoid setting headers after sending response
+    }
+    if (req.file.size > MAX_FILE_SIZE) {
+      throw new Error("max file size exceeded");
+    }
+>>>>>>> be41a3a (added helpers for scraping yugioh format site)
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
 
