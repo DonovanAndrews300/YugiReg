@@ -19,12 +19,13 @@ export default function FileUploader() {
   const [lastName, setLastName] = useState('');
   const [konamiId, setKonamiId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState('');
 
   const onSubmit = async () => {
     if (file) {
       setLoading(true);
 
-      const promise = uploadFile({ file, firstName, lastName, konamiId });
+      const promise = uploadFile({ file, firstName, lastName, konamiId, filter });
 
       toast.promise(
         promise,
@@ -73,6 +74,11 @@ export default function FileUploader() {
 
   const removeFile = () => {
     setFile(null);
+  };
+
+  const handleFilter = (event: React.ChangeEvent<HTMLSelectElement>)=>{
+    const { value } = event.target;
+    setFilter(value);
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +143,12 @@ export default function FileUploader() {
               <p className="file-name">{file.name}</p>
             )}
           </div>
+          <label>Format/Banlist:
+            <select value={filter} onChange={handleFilter}>
+              <option value="">Select Format</option>
+            </select></label>
+          
+
           <div className="buttons-container">
             {file && (
               <>
