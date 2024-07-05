@@ -15,7 +15,8 @@ describe('helpers', () => {
         jest.clearAllMocks();
         process.env.YGOPRO_API_URL = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
         process.env.AWS_REGION = 'us-west-2';
-        process.env.DYNAMODB_TABLE_NAME = 'MockedTableName';
+        process.env.DYNAMODB_TABLE_NAMES = 'MockedTableName';
+        process.env.YGO_CARD_DATABASE = 'MockedTableName';
     });
 
     test('writeFromYGOPRO should fetch cards from API and store them in DynamoDB', async () => {

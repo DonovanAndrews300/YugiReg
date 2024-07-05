@@ -1,8 +1,10 @@
-import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS, MAX_FILE_SIZE } from "./constants.js";
+import { AWS_REGION, DYNAMODB_TABLE_NAMES, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS, MAX_FILE_SIZE } from "./constants.js";
 import { PDFDocument } from "pdf-lib";
 import { readFile } from "fs/promises";
+import puppeteer from "puppeteer";
 import axios from "axios";
-import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
 
 const client = new DynamoDBClient({ region: AWS_REGION });
 
@@ -14,7 +16,17 @@ export const writeFromYGOPRO = async () => {
 
     console.log("Processing cards...");
     for (const card of allCards) {
-      await putItem(card);
+      const params = {
+        TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
+        Item: {
+          card_id: { S: card.id.toString() },
+          name: { S: card.name },
+          id: { S: card.id.toString() },
+          type: { S: card.type },
+        },
+        ConditionExpression: "attribute_not_exists(card_id)"
+      };
+      await putItem(params);
     }
     console.log("All cards processed.");
   } catch (error) {
@@ -26,7 +38,7 @@ export const isValidFile = (file) => {
   if (!file) {
     throw new Error("No file found");
   };
-  if (!file.name.endsWith('.ydk')) {
+  if (!file.name.endsWith(".ydk")) {
     throw new Error("Invalid file type");
   }
   if (file.size > MAX_FILE_SIZE) {
@@ -34,24 +46,11 @@ export const isValidFile = (file) => {
   }
 };
 
-const putItem = async (card) => {
-  const params = {
-    TableName: DYNAMODB_TABLE_NAME,
-    Item: {
-      card_id: { S: card.id.toString() },
-      name: { S: card.name },
-      id: { S: card.id.toString() },
-      type: { S: card.type },
-    },
-    ConditionExpression: "attribute_not_exists(card_id)"
-  };
-
-
+const putItem = async (params) => {
   try {
-    console.log(params);
-    await client.send(new PutItemCommand(params));
+    await client.send(new PutCommand(params));
   } catch (err) {
-    console.error("Error putting item:", err);
+    console.error("Error putting item to table:", err);
   }
 };
 
@@ -193,5 +192,128 @@ export const fillForm = async (deckList, playerInfo) => {
   } catch (error) {
     console.error("Error filling form:", error);
     throw new Error(error);
+  }
+};
+
+export const getFormats = async () => {
+  try {
+    // Launch a headless browser
+    console.log("Launching headless browser");
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // Navigate to the URL
+    const url = "https://www.formatlibrary.com/formats/";
+    console.log(`Navigating to ${url}`);
+    await page.goto(url, { waitUntil: "networkidle0" });
+
+    // Wait for the JavaScript to load and render the content
+    console.log("Waiting for the content to be rendered");
+    await page.waitForSelector("#root", { timeout: 10000 });
+
+    const formats = await page.evaluate(() => {
+      const rootElement = document.querySelector(".format-menu");
+      const children = rootElement.children;
+      const contentArray = [];
+      for (let i = 0; i < children.length; i++) {
+        contentArray.push(children[i].querySelector(".format-button div").innerHTML);
+      }
+
+      return rootElement ? contentArray : "No content found in #root";
+    });
+    console.log("Closing browser");
+    await browser.close();
+
+    return formats;
+    // Close the browser
+  } catch (error) {
+    console.error("Error occurred:", error);
+    throw error;
+  }
+};
+
+export const getFormatBanList = async (formatName) => {
+  try {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    const url = `https://www.formatlibrary.com/formats/${formatName}`;
+    console.log(`Navigating to ${url}`);
+    const response = await page.goto(url, { waitUntil: "networkidle0" });
+
+    console.log("Waiting for the content to be rendered");
+    await page.waitForSelector("#root", { timeout: 20000 });
+    const forbiddenList = await page.evaluate(() => {
+      const cards = [];
+      const root = document.querySelectorAll("#forbidden img");
+      if (!root) {
+        console.log("No element found with #root");
+
+        return null;
+      }
+      root.forEach(child => cards.push(child.alt));
+
+      return cards;
+    });
+    const limitedList = await page.evaluate(() => {
+      const cards = [];
+      const root = document.querySelectorAll("#limited img");
+      if (!root) {
+        console.log("No element found with #root");
+
+        return null;
+      }
+      root.forEach(child => cards.push(child.alt));
+
+      return cards;
+    });
+    const semiLimitedList = await page.evaluate(() => {
+      const cards = [];
+      const root = document.querySelectorAll("#semi-limited img");
+      if (!root) {
+        console.log("No element found with #root");
+
+        return null;
+      }
+      root.forEach(child => cards.push(child.alt));
+
+      return cards;
+    });
+    const banList = {
+      forbidden:forbiddenList,
+      limited:limitedList,
+      semiLimited:semiLimitedList
+    };
+    await browser.close();
+
+    return banList;
+  }
+  catch (e) {
+    console.log(e);
+    throw e;
+  }
+
+};
+
+export const writeToFormatTable = async () => {
+  try {
+    const formats = await getFormats();
+    console.log(formats);
+    for (const format of formats) {
+      const banList = await getFormatBanList(format);
+
+      const params = {
+        TableName: DYNAMODB_TABLE_NAMES.FORMATS,
+        Item: {
+          format_name: format,
+          ban_list: banList,
+        },
+      };
+
+      console.log(params);
+      await putItem(params);  // Make sure to await the putItem function
+    } }
+  catch (error) {
+    console.log(error);
   }
 };
