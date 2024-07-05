@@ -4,7 +4,7 @@ import { readFile } from "fs/promises";
 import puppeteer from "puppeteer";
 import axios from "axios";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, GetItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
 
 const client = new DynamoDBClient({ region: AWS_REGION });
 
@@ -124,6 +124,7 @@ export const getDeck = async (ydk) => {
 };
 
 const getItem = async (tableName, cardId) => {
+  //write tests for this
   const params = {
     TableName: tableName,
     Key: { card_id: { S: cardId.toString() } }
@@ -315,5 +316,22 @@ export const writeToFormatTable = async () => {
     } }
   catch (error) {
     console.log(error);
+  }
+};
+
+export const getFormatFilters = async () => {
+  const params = {
+    TableName: DYNAMODB_TABLE_NAMES.FORMATS,
+  };
+  try {
+    const command = new ScanCommand(params);
+    const data = await client.send(command);
+    const formatFilters = data.Items.map(item => item.format_name.S);
+
+    return formatFilters;
+
+  } catch (err) {
+    console.error("Error scanning table:", err);
+    throw err;
   }
 };
