@@ -1,9 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ToastContainer, toast } from 'react-toastify';
 
 import { uploadFile } from '../../utils/uploadFile';
 import 'react-toastify/dist/ReactToastify.css';
+import { getFilters } from '../../utils/getFilters';
 
 type Response = {
   data: {
@@ -20,6 +21,15 @@ export default function FileUploader() {
   const [konamiId, setKonamiId] = useState('');
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('');
+  const [filters, setFilters] = useState([]);
+
+  useEffect(() => {
+    const getData = async  () => {
+      const results = await getFilters();
+      setFilters(await results.json());
+    };
+    getData();
+  }, []);
 
   const onSubmit = async () => {
     if (file) {
@@ -146,6 +156,9 @@ export default function FileUploader() {
           <label>Format/Banlist:
             <select value={filter} onChange={handleFilter}>
               <option value="">Select Format</option>
+              {
+                filters.map((filter, index) => <option key={index} value={`${filter}`}>{filter}</option>)
+              }
             </select></label>
           
 
