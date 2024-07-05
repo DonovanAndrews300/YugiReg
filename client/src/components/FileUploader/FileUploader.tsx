@@ -137,6 +137,13 @@ export default function FileUploader() {
               <p className="file-name">{file.name}</p>
             )}
           </div>
+          
+          <label>Format/Banlist:
+            <select>
+              <option value="">Select Format</option>
+            </select></label>
+          
+
           <div className="buttons-container">
             {file && (
               <>
