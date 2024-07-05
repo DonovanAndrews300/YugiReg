@@ -5,7 +5,7 @@ import { config } from "dotenv";
 import { DEFAULT_PORT } from "./constants.js";
 
 config();
-import { getDeck, fillForm, isValidFile, writeToFormatTable } from "./helpers.js";
+import { getDeck, fillForm, isValidFile } from "./helpers.js";
 
 const app = express();
 app.use(cors());
