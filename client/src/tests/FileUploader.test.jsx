@@ -28,6 +28,13 @@ describe('FileUploader', () => {
     expect( screen.getByText('Upload YDK File')).toBeInTheDocument();
   });
   test('Wont upload invalid file type', async () => {
+    fetch.mockRejectedValueOnce({
+      ok: true,
+      text: () => Promise.resolve(),
+      json: () => Promise.resolve(["a"]),
+      message: "Exceeds the maximum allowed Monster cards."
+    });
+
     render(<FileUploader />);
     const input = screen.getByText('Upload YDK File').parentElement.querySelector('input');
     const invalidFile = new File(['dummy content'], 'example.txt', { type: 'text/plain' });
@@ -38,7 +45,9 @@ describe('FileUploader', () => {
   });
   test('Displays error message is promise rejects', async () => {
     fetch.mockRejectedValueOnce({
+      ok: true,
       text: () => Promise.resolve(),
+      json: () => Promise.resolve(["a"]),
       message: "Exceeds the maximum allowed Monster cards."
     });
 
