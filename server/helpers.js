@@ -1,4 +1,4 @@
-import { AWS_REGION, DYNAMODB_TABLE_NAME, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS, MAX_FILE_SIZE } from "./constants.js";
+import { AWS_REGION, DYNAMODB_TABLE_NAMES, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS, MAX_FILE_SIZE } from "./constants.js";
 import { PDFDocument } from "pdf-lib";
 import { readFile } from "fs/promises";
 import puppeteer from "puppeteer";
