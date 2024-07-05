@@ -106,30 +106,36 @@ export const getDeck = async (ydk) => {
   let fullDeck = { main: [], extra: [], side: [] };
 
   for (const id of singlesDeckIds.main) {
-    const item = await getItem(DYNAMODB_TABLE_NAME, id);
+    const params = {
+      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
+      Key: { card_id: { S: id.toString() } }
+    };
+    const item = await getItem(params);
     if (item) fullDeck.main.push(item);
   }
 
   for (const id of singlesDeckIds.extra) {
-    const item = await getItem(DYNAMODB_TABLE_NAME, id);
+    const params = {
+      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
+      Key: { card_id: { S: id.toString() } }
+    };
+    const item = await getItem(params);
     if (item) fullDeck.extra.push(item);
   }
 
   for (const id of singlesDeckIds.side) {
-    const item = await getItem(DYNAMODB_TABLE_NAME, id);
+    const params = {
+      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
+      Key: { card_id: { S: id.toString() } }
+    };
+    const item = await getItem(params);
     if (item) fullDeck.side.push(item);
   }
 
   return fullDeck;
 };
 
-const getItem = async (tableName, cardId) => {
-  //write tests for this
-  const params = {
-    TableName: tableName,
-    Key: { card_id: { S: cardId.toString() } }
-  };
-
+const getItem = async (params) => {
   try {
     const { Item } = await client.send(new GetItemCommand(params));
 
