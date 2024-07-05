@@ -3,12 +3,13 @@ type UploadFileProps ={
     firstName:string;
     lastName:string;
     konamiId:string;
+    filter:string;
 
 }
 
 export const uploadFile = async (props:UploadFileProps ): Promise<void> => {
   try {
-    const {file,firstName,lastName,konamiId} = props;
+    const {file,firstName,lastName,konamiId,filter} = props;
     const MAX_FILE_SIZE = 1 * 1024 * 1024; //1mb
     if(file.size > MAX_FILE_SIZE){
       throw new  Error("Uploaded file exceeds maximum file size");
@@ -18,6 +19,7 @@ export const uploadFile = async (props:UploadFileProps ): Promise<void> => {
     formData.append('firstName',firstName);
     formData.append('lastName',lastName);
     formData.append('konamiId', konamiId);
+    formData.append('filter', filter);
     const response = await fetch('https://yugireg-45086852d588.herokuapp.com/', {
       method: 'POST',
       body: formData,
