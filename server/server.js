@@ -5,7 +5,7 @@ import { config } from "dotenv";
 import { DEFAULT_PORT } from "./constants.js";
 
 config();
-import { getDeck, fillForm, isValidFile, writeToFormatTable } from "./helpers.js";
+import { getDeck, fillForm, isValidFile, getFormatFilters } from "./helpers.js";
 
 const app = express();
 app.use(cors());
@@ -46,5 +46,12 @@ const handleDefaultGetRoute = (req, res) => {
   res.send("welcome to server");
 };
 
+const handleGetFiltersRoute = async (req, res) => {
+  const filters = await getFormatFilters();
+  console.log(filters);
+  res.send(JSON.stringify(filters));
+};
+
 app.get("/", handleDefaultGetRoute);
 app.post("/", upload.single("file"), handlePostYDKRoute);
+app.get("/filters", handleGetFiltersRoute);
