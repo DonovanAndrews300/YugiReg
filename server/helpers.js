@@ -34,7 +34,6 @@ export const writeFromYGOPRO = async () => {
   }
 };
 
-<<<<<<< HEAD
 export const isValidFile = (file) => {
   if (!file) {
     throw new Error("No file found");
@@ -47,21 +46,7 @@ export const isValidFile = (file) => {
   }
 };
 
-const putItem = async (card) => {
-  const params = {
-    TableName: DYNAMODB_TABLE_NAME,
-    Item: {
-      card_id: { S: card.id.toString() },
-      name: { S: card.name },
-      id: { S: card.id.toString() },
-      type: { S: card.type },
-    },
-    ConditionExpression: "attribute_not_exists(card_id)"
-  };
-
-=======
 const putItem = async (params) => {
->>>>>>> be41a3a (added helpers for scraping yugioh format site)
   try {
     await client.send(new PutCommand(params));
   } catch (err) {
