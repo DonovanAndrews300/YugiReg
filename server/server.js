@@ -17,22 +17,10 @@ app.listen(port, () => {
 const upload = multer({ storage: multer.memoryStorage() });
 const handlePostYDKRoute = async (req, res) => {
   //turn this into a helper function isValidRequest
-<<<<<<< HEAD
   const file = req.file;
   isValidFile(file);
   try {
 
-=======
-  try {
-    if (!req.file) {
-      res.send("no ydk");
-
-      return; // make sure to return here to avoid setting headers after sending response
-    }
-    if (req.file.size > MAX_FILE_SIZE) {
-      throw new Error("max file size exceeded");
-    }
->>>>>>> be41a3a (added helpers for scraping yugioh format site)
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
 
