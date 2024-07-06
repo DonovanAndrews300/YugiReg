@@ -202,7 +202,7 @@ export const fillForm = async (deckList, playerInfo) => {
        return acc;
      }, [])
     ;
-    // Filter out any null values that were added to maintain the array structure
+    //Combines together the array of banned cards and returns a complete string of all banned cards
 
     if (bannedCardsArr.length > 0) {
       const bannedCardsString  = () =>{
@@ -254,6 +254,7 @@ export const getFormats = async () => {
     const formats = await page.evaluate(() => {
       const rootElement = document.querySelector(".format-menu");
       const children = rootElement.children;
+      //I add Current string here becuase its the most current format. I thought to manually add this because I will probably get all formats at some point but this is much easier than scraping the page for it
       const contentArray = ["Current"];
       for (let i = 0; i < children.length; i++) {
         contentArray.push(children[i].querySelector(".format-button div").innerHTML);
@@ -374,6 +375,8 @@ export const getFormatFilters = async () => {
     console.error("Error scanning table:", err);
     throw err;
   } };
+
+//This returns an object of all the banned cards
 const banListValidator = async (format, cardList) => {
   const params = {
     TableName: DYNAMODB_TABLE_NAMES.FORMATS,
