@@ -254,7 +254,7 @@ export const getFormats = async () => {
     const formats = await page.evaluate(() => {
       const rootElement = document.querySelector(".format-menu");
       const children = rootElement.children;
-      const contentArray = [];
+      const contentArray = ["Current"];
       for (let i = 0; i < children.length; i++) {
         contentArray.push(children[i].querySelector(".format-button div").innerHTML);
       }
