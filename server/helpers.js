@@ -158,12 +158,13 @@ export const fillForm = async (deckList, playerInfo) => {
     form.getTextField("First  Middle Names").setText(firstName);
     form.getTextField("Last Names").setText(lastName);
     form.getTextField("CARD GAME ID").setText(konamiId);
-
     const countOccurrences = (array, element) => array.filter(item => item.name.S === element.name.S).length;
     const fillDeck = async (deckType, deckCards, filledOutCards, cardNumber) => {
-      const bannedCards =  await banListValidator(filter, deckCards);
-      if (bannedCards) {
-        return bannedCards;
+      if (filter) {
+        const bannedCards =  await banListValidator(filter, deckCards);
+        if (bannedCards) {
+          return bannedCards;
+        }
       }
       deckCards.forEach((card) => {
         if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") && cardNumber > MAX_MAIN_DECK_TYPE_CARDS) {

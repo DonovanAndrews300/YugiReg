@@ -26,10 +26,9 @@ export default function FileUploader() {
   useEffect(() => {
     const getData = async  () => {
       const results = await getFilters();
-      console.log(results.json());
       setFilters(await results.json());
     };
-    if(filter.length>0){
+    if(filter.length<=0){
       getData();
     }
 
@@ -82,7 +81,7 @@ export default function FileUploader() {
     } else {
       toast.error("Incorrect file type");
     }
-  }, []);
+  }, [filters]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
@@ -105,7 +104,6 @@ export default function FileUploader() {
       setKonamiId(value);
     }
   };
-
   return (
     <div className="layout-container">
       <div className="inputs-upload-container">
@@ -161,7 +159,8 @@ export default function FileUploader() {
             <select value={filter} onChange={handleFilter}>
               <option value="">Select Format</option>
               {
-                filters.map((filter, index) => <option key={index} value={`${filter}`}>{filter}</option>)
+                filters.map((filter, index) => {
+                  return <option key={index} value={`${filter}`}>{filter}</option>;})
               }
             </select></label>
           
