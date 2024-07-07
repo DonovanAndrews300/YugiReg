@@ -26,9 +26,11 @@ export default function FileUploader() {
   useEffect(() => {
     const getData = async  () => {
       const results = await getFilters();
-      setFilters(await results.json());
-    };
-    if(filter.length<=0){
+      const filterStrings = await results.json();
+      if(filterStrings.length > 0 ) {
+        setFilters(filterStrings);
+      };};
+    if(filters.length<=0 && filter.length>0){
       getData();
     }
 
