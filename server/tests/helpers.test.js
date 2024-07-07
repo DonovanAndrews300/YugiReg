@@ -20,7 +20,7 @@ describe('helpers', () => {
     });
 
     test('writeFromYGOPRO should fetch cards from API and store them in DynamoDB', async () => {
-        axios.get.mockResolvedValue({ data: { data: [{ id: '123', name: 'Test Card', type: 'Monster' }] } });
+        axios.get.mockResolvedValue({ data: { data: [{ id: '123', originalname: 'Test Card', type: 'Monster' }] } });
         const mockClient = new DynamoDBClient();
         const putItemSpy = jest.spyOn(mockClient, 'send').mockResolvedValue({});
 
@@ -65,17 +65,17 @@ describe('helpers', () => {
         expect(() =>isValidFile()).toThrow("No file found")
     })
     test('isValidFile should throw an error when the file type is not ydk', () => {
-        const invalidFile = { name: 'test.txt', size: MAX_FILE_SIZE - 1 }; 
+        const invalidFile = { originalname: 'test.txt', size: MAX_FILE_SIZE - 1 }; 
         expect(() => isValidFile(invalidFile)).toThrow("Invalid file type");
       });
 
     it(' isValidFile should throw an error when the file size exceeds the maximum allowed size', () => {
-        const largeFile = { name: 'test.ydk', size: MAX_FILE_SIZE + 1 }; 
+        const largeFile = { originalname: 'test.ydk', size: MAX_FILE_SIZE + 1 }; 
         expect(() => isValidFile(largeFile)).toThrow("Max file size exceeded");
       });
     
       it('isValidFile should return true for a valid file', () => {
-        const validFile = { name: 'test.ydk', size: MAX_FILE_SIZE - 1 };
+        const validFile = { originalname: 'test.ydk', size: MAX_FILE_SIZE - 1 };
         expect(() => isValidFile(validFile)).not.toThrow();
       });
 });
