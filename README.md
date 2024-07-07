@@ -18,7 +18,7 @@ To get started with this project, follow these steps:
 git clone https://github.com/your-username/your-repo-name.git
 ```
 
-There is a demo ydk file within the client folder of the project that you can use to test out how the application works.
+There is a demo ydk file within the root folder of the project that you can use to test out how the application works.
 
 ## License
 
