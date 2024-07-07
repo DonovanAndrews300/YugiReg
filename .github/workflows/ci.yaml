@@ -38,7 +38,7 @@ jobs:
         run: cd server && npm run lint
 
       - name: Run Tests for client
-        run: cd client && npm run test
+        run: cd client && npm test
 
       - name: Run Tests for server
-        run: cd server && npm run test
+        run: cd server && npm test

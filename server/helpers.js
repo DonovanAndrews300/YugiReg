@@ -38,7 +38,7 @@ export const isValidFile = (file) => {
   if (!file) {
     throw new Error("No file found");
   };
-  if (!file.name.endsWith(".ydk")) {
+  if (!file.originalname.endsWith(".ydk")) {
     throw new Error("Invalid file type");
   }
   if (file.size > MAX_FILE_SIZE) {
@@ -102,34 +102,40 @@ export const getYdkIds = async (ydkFile) => {
 
 // Function to get a deck from YDK file
 export const getDeck = async (ydk) => {
-  const singlesDeckIds = await getUniqueYdkIds(ydk);
+  const singlesDeckIds = await getYdkIds(ydk);
   let fullDeck = { main: [], extra: [], side: [] };
 
   for (const id of singlesDeckIds.main) {
-    const item = await getItem(DYNAMODB_TABLE_NAME, id);
+    const params = {
+      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
+      Key: { card_id: { S: id.toString() } }
+    };
+    const item = await getItem(params);
     if (item) fullDeck.main.push(item);
   }
 
   for (const id of singlesDeckIds.extra) {
-    const item = await getItem(DYNAMODB_TABLE_NAME, id);
+    const params = {
+      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
+      Key: { card_id: { S: id.toString() } }
+    };
+    const item = await getItem(params);
     if (item) fullDeck.extra.push(item);
   }
 
   for (const id of singlesDeckIds.side) {
-    const item = await getItem(DYNAMODB_TABLE_NAME, id);
+    const params = {
+      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
+      Key: { card_id: { S: id.toString() } }
+    };
+    const item = await getItem(params);
     if (item) fullDeck.side.push(item);
   }
 
   return fullDeck;
 };
 
-const getItem = async (tableName, cardId) => {
-  //write tests for this
-  const params = {
-    TableName: tableName,
-    Key: { card_id: { S: cardId.toString() } }
-  };
-
+const getItem = async (params) => {
   try {
     const { Item } = await client.send(new GetItemCommand(params));
 
@@ -148,19 +154,22 @@ export const fillForm = async (deckList, playerInfo) => {
     const resolvedDeckList = await deckList;
     const form = pdfDoc.getForm();
 
-    const { firstName, lastName, konamiId } = playerInfo;
+    const { firstName, lastName, konamiId, filter } = playerInfo;
     form.getTextField("First  Middle Names").setText(firstName);
     form.getTextField("Last Names").setText(lastName);
     form.getTextField("CARD GAME ID").setText(konamiId);
-
-    const countOccurrences = (array, element) => array.filter(item => item === element).length;
-
-    const fillDeck = (deckType, deckCards, filledOutCards, cardNumber) => {
+    const countOccurrences = (array, element) => array.filter(item => item.name.S === element.name.S).length;
+    const fillDeck = async (deckType, deckCards, filledOutCards, cardNumber) => {
+      if (filter) {
+        const bannedCards =  await banListValidator(filter, deckCards);
+        if (bannedCards) {
+          return bannedCards;
+        }
+      }
       deckCards.forEach((card) => {
         if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") && cardNumber > MAX_MAIN_DECK_TYPE_CARDS) {
           throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
         }
-
         if (!filledOutCards.includes(card.name.S)) {
           const count = countOccurrences(deckCards, card);
           //I call this cardString string but the extra deck and side deck fields have different card count names
@@ -173,12 +182,42 @@ export const fillForm = async (deckList, playerInfo) => {
         }
       });
     };
+    const deckTypes = ["Monster", "Spell", "Trap", "Extra Deck", "Side Deck"];
+    const bannedCardsArr =
+     await deckTypes.reduce(async (accPromise, deckType) => {
+       const acc = await accPromise;
+       let bannedCards = null;
+       if (deckType === "Extra Deck") {
+         bannedCards = await fillDeck(deckType, resolvedDeckList.extra, [], 1);
+       } else if (deckType === "Side Deck") {
+         bannedCards = await fillDeck(deckType, resolvedDeckList.side, [], 1);
+       } else {
+         bannedCards = await fillDeck(deckType, resolvedDeckList.main.filter(card => card.type.S.includes(deckType)), [], 1);
+       }
 
-    fillDeck("Monster", resolvedDeckList.main.filter(card => card.type.S.includes("Monster")), [], 1);
-    fillDeck("Spell", resolvedDeckList.main.filter(card => card.type.S.includes("Spell")), [], 1);
-    fillDeck("Trap", resolvedDeckList.main.filter(card => card.type.S.includes("Trap")), [], 1);
-    fillDeck("Extra Deck", resolvedDeckList.extra, [], 1);
-    fillDeck("Side Deck", resolvedDeckList.side, [], 1);
+       if (bannedCards) {
+         acc.push(bannedCards);
+       }
+
+       return acc;
+     }, [])
+    ;
+    //Combines together the array of banned cards and returns a complete string of all banned cards
+
+    if (bannedCardsArr.length > 0) {
+      const bannedCardsString  = () =>{
+        const bannedMap = bannedCardsArr.reduce((accum, curr)=>{
+          Object.keys(curr).forEach(key=>{
+            accum[key] = !accum[key] ? curr[key] : accum[key] + ", " + curr[key];
+          });
+
+          return  accum;
+        }, {});
+
+        return `You have cards that are banned. ${bannedMap.forbidden ? `Forbidden: ${bannedMap.forbidden}` : ""} ${bannedMap.limited ? `Limited: ${bannedMap.limited}` : ""} ${bannedMap.semiLimited ? `Semi-Limited: ${bannedMap.semiLimited}` : ""}`;
+      };
+      throw new Error(bannedCardsString());
+    };
 
     form.getTextField("Total Monster Cards").setText(`${resolvedDeckList.main.filter(card => card.type.S.includes("Monster")).length}`);
     form.getTextField("Total Spell Cards").setText(`${resolvedDeckList.main.filter(card => card.type.S.includes("Spell")).length}`);
@@ -215,7 +254,8 @@ export const getFormats = async () => {
     const formats = await page.evaluate(() => {
       const rootElement = document.querySelector(".format-menu");
       const children = rootElement.children;
-      const contentArray = [];
+      //I add Current string here becuase its the most current format. I thought to manually add this because I will probably get all formats at some point but this is much easier than scraping the page for it
+      const contentArray = ["Current"];
       for (let i = 0; i < children.length; i++) {
         contentArray.push(children[i].querySelector(".format-button div").innerHTML);
       }
@@ -309,6 +349,7 @@ export const writeToFormatTable = async () => {
           format_name: format,
           ban_list: banList,
         },
+        ConditionExpression: "attribute_not_exists(format_name)"
       };
 
       console.log(params);
@@ -333,5 +374,71 @@ export const getFormatFilters = async () => {
   } catch (err) {
     console.error("Error scanning table:", err);
     throw err;
+  } };
+
+//This returns an object of all the banned cards
+const banListValidator = async (format, cardList) => {
+  const params = {
+    TableName: DYNAMODB_TABLE_NAMES.FORMATS,
+    Key: { format_name: { S: format.toString() } }
+  };
+  const cardCounts = cardList.reduce((counts, card) => {
+    counts[card.name.S] = (counts[card.name.S] || 0) + 1;
+
+    return counts;
+  }, {});
+  const allBannedCards = {};
+  const banList = await getItem(params);
+  const forbidden = banList.ban_list.M.forbidden.L.map((item => item.S));
+  const limited = banList.ban_list.M.limited.L.map((item => item.S));
+  const semiLimited = banList.ban_list.M.semiLimited.L.map((item => item.S));
+  const forbiddenCardsInDeck = cardList.filter(card => forbidden.includes(card.name.S));
+  const forbiddenCardNames = forbiddenCardsInDeck.reduce((uniqueNames, card) => {
+    if (!uniqueNames.has(card.name.S)) {
+      uniqueNames.add(card.name.S);
+    }
+
+    return uniqueNames;
+  }, new Set());
+
+  const forbiddenCardNamesString = Array.from(forbiddenCardNames).join(", ");
+
+  const limitedCardsInDeck = cardList.filter(card => limited.includes(card.name.S) && cardCounts[card.name.S] > 1);
+  const limitedCardNames = limitedCardsInDeck.reduce((uniqueNames, card) => {
+    if (!uniqueNames.has(card.name.S)) {
+      uniqueNames.add(card.name.S);
+    }
+
+    return uniqueNames;
+  }, new Set());
+
+  const limitedCardNamesString = Array.from(limitedCardNames).join(", ");
+
+  const semiLimitedCardsInDeck = cardList.filter(card => semiLimited.includes(card.name.S) && cardCounts[card.name.S] > 2);
+  const semiLimitedCardNames = semiLimitedCardsInDeck.reduce((uniqueNames, card) => {
+    if (!uniqueNames.has(card.name.S)) {
+      uniqueNames.add(card.name.S);
+    }
+
+    return uniqueNames;
+  }, new Set());
+
+  const semiLimitedCardNamesString = Array.from(semiLimitedCardNames).join(", ");
+
+  if (forbiddenCardsInDeck.length > 0) {
+    allBannedCards["forbidden"] = forbiddenCardNamesString;
+  }
+  if (limitedCardsInDeck.length > 0) {
+    allBannedCards["limited"] = limitedCardNamesString;
+  }
+  if (semiLimitedCardsInDeck.length > 0) {
+    allBannedCards["semiLimited"] = semiLimitedCardNamesString;
+  }
+
+  if (Object.values(allBannedCards).length > 0) {
+    return allBannedCards;
+  }
+  else {
+    return false;
   }
 };

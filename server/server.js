@@ -16,7 +16,6 @@ app.listen(port, () => {
 
 const upload = multer({ storage: multer.memoryStorage() });
 const handlePostYDKRoute = async (req, res) => {
-  //turn this into a helper function isValidRequest
   const file = req.file;
   isValidFile(file);
   try {
@@ -27,7 +26,8 @@ const handlePostYDKRoute = async (req, res) => {
     const playerInfo = {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
-      konamiId: req.body.konamiId
+      konamiId: req.body.konamiId,
+      filter: req.body.filter
     };
     const loadedDeck = await getDeck(file.buffer);
     const filledForm = await fillForm(loadedDeck, playerInfo);
@@ -48,7 +48,6 @@ const handleDefaultGetRoute = (req, res) => {
 
 const handleGetFiltersRoute = async (req, res) => {
   const filters = await getFormatFilters();
-  console.log(filters);
   res.send(JSON.stringify(filters));
 };
 
