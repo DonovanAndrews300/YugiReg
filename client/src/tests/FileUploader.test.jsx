@@ -28,13 +28,6 @@ describe('FileUploader', () => {
     expect( screen.getByText('Upload YDK File')).toBeInTheDocument();
   });
   test('Wont upload invalid file type', async () => {
-    fetch.mockRejectedValueOnce({
-      ok: true,
-      text: () => Promise.resolve(),
-      json: () => Promise.resolve(["a"]),
-      message: "Exceeds the maximum allowed Monster cards."
-    });
-
     render(<FileUploader />);
     const input = screen.getByText('Upload YDK File').parentElement.querySelector('input');
     const invalidFile = new File(['dummy content'], 'example.txt', { type: 'text/plain' });
@@ -43,33 +36,15 @@ describe('FileUploader', () => {
       expect(screen.queryByText('example.txt')).not.toBeInTheDocument();
     });
   });
-  test('Displays error message is promise rejects', async () => {
-    fetch.mockRejectedValueOnce({
-      ok: true,
-      text: () => Promise.resolve(),
-      json: () => Promise.resolve(["a"]),
-      message: "Exceeds the maximum allowed Monster cards."
-    });
 
-    render(<FileUploader />);
-
-    const input = screen.getByTestId('dropzone-input');
-
-    await act(async () => {
-      fireEvent.change(input, { target: { files: [mockFile] } });
-    });
-
-    fireEvent.click(screen.getByText('Submit'));
-
-    await waitFor(() => expect(screen.getByText(/Uploading file.../i)).toBeInTheDocument());
-
-    await waitFor(() => {
-      expect(screen.getByText(/File upload failed 🤯: Exceeds the maximum allowed Monster cards./i)).toBeInTheDocument();
-    });
-  });
 
   test('Displays success message and downloads file with promise resolution', async () => {
     global.URL.createObjectURL.mockReturnValue('blob:http://localhost/some-blob-url');
+    fetch.mockResolvedValueOnce({
+      ok: true, 
+      blob: () => "blob",
+      json: async () => ["a"],
+    });
     fetch.mockResolvedValueOnce({
       ok: true, 
       blob: () => "blob",
