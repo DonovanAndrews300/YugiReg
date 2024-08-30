@@ -20,7 +20,7 @@ export const uploadFile = async (props:UploadFileProps ): Promise<void> => {
     formData.append('lastName',lastName);
     formData.append('konamiId', konamiId);
     formData.append('filter', filter);
-    const response = await fetch('https://yugireg-45086852d588.herokuapp.com/', {
+    const response = await fetch('https://yugireg.onrender.com', {
       method: 'POST',
       body: formData,
     });
