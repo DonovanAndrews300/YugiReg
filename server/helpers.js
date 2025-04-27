@@ -1,33 +1,61 @@
-import { AWS_REGION, DYNAMODB_TABLE_NAMES, YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS, MAX_FILE_SIZE } from "./constants.js";
+import { YGOPRO_API_URL, MAX_MAIN_DECK_TYPE_CARDS, MAX_FILE_SIZE } from "./constants.js";
 import { PDFDocument } from "pdf-lib";
-import { readFile } from "fs/promises";
+import { readFile, writeFile, mkdir, readFile as fsReadFile } from "fs/promises";
+import { existsSync } from "fs";
 import puppeteer from "puppeteer";
 import axios from "axios";
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient, GetItemCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
+import path from "path";
 
-const client = new DynamoDBClient({ region: AWS_REGION });
+const DATA_DIR = path.join(process.cwd(), "data");
+const CARD_DATABASE_FILE = path.join(DATA_DIR, "ygocarddatabase.json");
+const FORMATS_FILE = path.join(DATA_DIR, "formats.json");
+const KDE_DECKLIST_PDF = path.join(process.cwd(), "KDE_DeckList.pdf");
 
-// Function to update DynamoDb with new cards
+if (!existsSync(DATA_DIR)) {
+  mkdir(DATA_DIR, { recursive: true });
+}
+
+const readJsonFile = async (filePath) => {
+  try {
+    const data = await fsReadFile(filePath, "utf-8");
+
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return {};
+    }
+    console.error(`Error reading file ${filePath}:`, error);
+    throw error;
+  }
+};
+
+const writeJsonFile = async (filePath, data) => {
+  try {
+    await writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
+  } catch (error) {
+    console.error(`Error writing to file ${filePath}:`, error);
+    throw error;
+  }
+};
+
 export const writeFromYGOPRO = async () => {
   try {
     const response = await axios.get(YGOPRO_API_URL);
     const allCards = response.data.data;
+    const existingCards = await readJsonFile(CARD_DATABASE_FILE);
 
     console.log("Processing cards...");
     for (const card of allCards) {
-      const params = {
-        TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
-        Item: {
-          card_id: { S: card.id.toString() },
-          name: { S: card.name },
-          id: { S: card.id.toString() },
-          type: { S: card.type },
-        },
-        ConditionExpression: "attribute_not_exists(card_id)"
-      };
-      await putItem(params);
+      if (!existingCards[card.id]) {
+        existingCards[card.id] = {
+          card_id: card.id.toString(),
+          name: card.name,
+          id: card.id.toString(),
+          type: card.type,
+        };
+      }
     }
+    await writeJsonFile(CARD_DATABASE_FILE, existingCards);
     console.log("All cards processed.");
   } catch (error) {
     console.error("Error fetching or processing cards:", error);
@@ -43,14 +71,6 @@ export const isValidFile = (file) => {
   }
   if (file.size > MAX_FILE_SIZE) {
     throw new Error("Max file size exceeded");
-  }
-};
-
-const putItem = async (params) => {
-  try {
-    await client.send(new PutCommand(params));
-  } catch (err) {
-    console.error("Error putting item to table:", err);
   }
 };
 
@@ -103,54 +123,34 @@ export const getYdkIds = async (ydkFile) => {
 // Function to get a deck from YDK file
 export const getDeck = async (ydk) => {
   const singlesDeckIds = await getYdkIds(ydk);
+  const cardDatabase = await readJsonFile(CARD_DATABASE_FILE);
   let fullDeck = { main: [], extra: [], side: [] };
 
   for (const id of singlesDeckIds.main) {
-    const params = {
-      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
-      Key: { card_id: { S: id.toString() } }
-    };
-    const item = await getItem(params);
-    if (item) fullDeck.main.push(item);
+    if (cardDatabase[id]) {
+      fullDeck.main.push(cardDatabase[id]);
+    }
   }
 
   for (const id of singlesDeckIds.extra) {
-    const params = {
-      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
-      Key: { card_id: { S: id.toString() } }
-    };
-    const item = await getItem(params);
-    if (item) fullDeck.extra.push(item);
+    if (cardDatabase[id]) {
+      fullDeck.extra.push(cardDatabase[id]);
+    }
   }
 
   for (const id of singlesDeckIds.side) {
-    const params = {
-      TableName: DYNAMODB_TABLE_NAMES.YGO_CARD_DATABASE,
-      Key: { card_id: { S: id.toString() } }
-    };
-    const item = await getItem(params);
-    if (item) fullDeck.side.push(item);
+    if (cardDatabase[id]) {
+      fullDeck.side.push(cardDatabase[id]);
+    }
   }
 
   return fullDeck;
 };
 
-const getItem = async (params) => {
-  try {
-    const { Item } = await client.send(new GetItemCommand(params));
-
-    return Item;
-  } catch (error) {
-    console.error(`Failed to retrieve item with card_id ${cardId}:`, error);
-
-    return null;
-  }
-};
-
 // Function to fill out PDF form with deck list
 export const fillForm = async (deckList, playerInfo) => {
   try {
-    const pdfDoc = await PDFDocument.load(await readFile("KDE_DeckList.pdf"));
+    const pdfDoc = await PDFDocument.load(await readFile(KDE_DECKLIST_PDF));
     const resolvedDeckList = await deckList;
     const form = pdfDoc.getForm();
 
@@ -158,7 +158,7 @@ export const fillForm = async (deckList, playerInfo) => {
     form.getTextField("First  Middle Names").setText(firstName);
     form.getTextField("Last Names").setText(lastName);
     form.getTextField("CARD GAME ID").setText(konamiId);
-    const countOccurrences = (array, element) => array.filter(item => item.name.S === element.name.S).length;
+    const countOccurrences = (array, element) => array.filter(item => item.name === element.name).length;
     const fillDeck = async (deckType, deckCards, filledOutCards, cardNumber) => {
       if (filter) {
         const bannedCards =  await banListValidator(filter, deckCards);
@@ -170,14 +170,14 @@ export const fillForm = async (deckList, playerInfo) => {
         if ((deckType === "Monster" || deckType === "Spell" || deckType === "Trap") && cardNumber > MAX_MAIN_DECK_TYPE_CARDS) {
           throw new Error(`Exceeds the maximum allowed ${deckType} cards.`);
         }
-        if (!filledOutCards.includes(card.name.S)) {
+        if (!filledOutCards.includes(card.name)) {
           const count = countOccurrences(deckCards, card);
           //I call this cardString string but the extra deck and side deck fields have different card count names
           const cardString = deckType === "Extra Deck" || deckType === "Side Deck" ? "" : "Card ";
-          form.getTextField(`${deckType} ${cardNumber}`).setText(card.name.S);
+          form.getTextField(`${deckType} ${cardNumber}`).setText(card.name);
           form.getTextField(`${deckType} ${cardString}${cardNumber} Count`).setText(`${count}`);
           // This is to avoid adding duplicates
-          filledOutCards.push(card.name.S);
+          filledOutCards.push(card.name);
           cardNumber++;
         }
       });
@@ -192,7 +192,7 @@ export const fillForm = async (deckList, playerInfo) => {
        } else if (deckType === "Side Deck") {
          bannedCards = await fillDeck(deckType, resolvedDeckList.side, [], 1);
        } else {
-         bannedCards = await fillDeck(deckType, resolvedDeckList.main.filter(card => card.type.S.includes(deckType)), [], 1);
+         bannedCards = await fillDeck(deckType, resolvedDeckList.main.filter(card => card.type.includes(deckType)), [], 1);
        }
 
        if (bannedCards) {
@@ -219,9 +219,9 @@ export const fillForm = async (deckList, playerInfo) => {
       throw new Error(bannedCardsString());
     };
 
-    form.getTextField("Total Monster Cards").setText(`${resolvedDeckList.main.filter(card => card.type.S.includes("Monster")).length}`);
-    form.getTextField("Total Spell Cards").setText(`${resolvedDeckList.main.filter(card => card.type.S.includes("Spell")).length}`);
-    form.getTextField("Total Trap Cards").setText(`${resolvedDeckList.main.filter(card => card.type.S.includes("Trap")).length}`);
+    form.getTextField("Total Monster Cards").setText(`${resolvedDeckList.main.filter(card => card.type.includes("Monster")).length}`);
+    form.getTextField("Total Spell Cards").setText(`${resolvedDeckList.main.filter(card => card.type.includes("Spell")).length}`);
+    form.getTextField("Total Trap Cards").setText(`${resolvedDeckList.main.filter(card => card.type.includes("Trap")).length}`);
     form.getTextField("Total Extra Deck").setText(`${resolvedDeckList.extra.length}`);
     form.getTextField("Total Side Deck").setText(`${resolvedDeckList.side.length}`);
 
@@ -236,209 +236,285 @@ export const fillForm = async (deckList, playerInfo) => {
 };
 
 export const getFormats = async () => {
+  let browser;
   try {
-    // Launch a headless browser
-    console.log("Launching headless browser");
-    const browser = await puppeteer.launch();
+    console.log("Launching browser...");
+    browser = await puppeteer.launch({
+      headless: "new", // use "new" or false for debugging
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-blink-features=AutomationControlled"
+      ],
+      defaultViewport: null,
+    });
+
     const page = await browser.newPage();
 
-    // Navigate to the URL
+    // Fake a real User-Agent
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+      "AppleWebKit/537.36 (KHTML, like Gecko) " +
+      "Chrome/115.0.0.0 Safari/537.36"
+    );
+
     const url = "https://www.formatlibrary.com/formats/";
     console.log(`Navigating to ${url}`);
-    await page.goto(url, { waitUntil: "networkidle0" });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
-    // Wait for the JavaScript to load and render the content
-    console.log("Waiting for the content to be rendered");
-    await page.waitForSelector("#root", { timeout: 10000 });
+    console.log("Waiting for format menu...");
+    await page.waitForSelector(".format-menu", { timeout: 20000 });
 
     const formats = await page.evaluate(() => {
       const rootElement = document.querySelector(".format-menu");
+      if (!rootElement) return [];
+
+      const contentArray = ["Current"]; // manually add "Current" format
       const children = rootElement.children;
-      //I add Current string here becuase its the most current format. I thought to manually add this because I will probably get all formats at some point but this is much easier than scraping the page for it
-      const contentArray = ["Current"];
       for (let i = 0; i < children.length; i++) {
-        contentArray.push(children[i].querySelector(".format-button div").innerHTML);
+        const button = children[i].querySelector(".format-button div");
+        if (button) {
+          contentArray.push(button.innerText.trim());
+        }
       }
 
-      return rootElement ? contentArray : "No content found in #root";
+      return contentArray;
     });
-    console.log("Closing browser");
-    await browser.close();
+
+    console.log("Formats found:", formats);
 
     return formats;
-    // Close the browser
   } catch (error) {
-    console.error("Error occurred:", error);
+    console.error("Error occurred while scraping formats:", error);
     throw error;
+  } finally {
+    if (browser) {
+      console.log("Closing browser...");
+      await browser.close();
+    }
   }
 };
 
 export const getFormatBanList = async (formatName) => {
+  let browser;
   try {
-    const browser = await puppeteer.launch();
+    console.log(`Launching browser to get ban list for ${formatName}...`);
+    browser = await puppeteer.launch({
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-blink-features=AutomationControlled",
+      ],
+      defaultViewport: null,
+    });
+
     const page = await browser.newPage();
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+    );
 
-    const url = `https://www.formatlibrary.com/formats/${formatName}`;
+    let url = "";
+    if (formatName === "Current") {
+      url = "https://www.yugioh-card.com/en/limited/";
+    } else {
+      url = `https://www.formatlibrary.com/formats/${formatName}`;
+    }
+
     console.log(`Navigating to ${url}`);
-    const response = await page.goto(url, { waitUntil: "networkidle0" });
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+    console.log("After page.goto");
 
-    console.log("Waiting for the content to be rendered");
-    await page.waitForSelector("#root", { timeout: 20000 });
-    const forbiddenList = await page.evaluate(() => {
-      const cards = [];
-      const root = document.querySelectorAll("#forbidden img");
-      if (!root) {
-        console.log("No element found with #root");
+    let banList = { forbidden: [], limited: [], semiLimited: [] };
 
-        return null;
+    if (formatName === "Current") {
+      console.log("Scraping ban list from Konami website...");
+      try {
+        await page.waitForSelector(".wp-block-button__link", { timeout: 10000, visible: true });
+        await Promise.all([
+          page.click(".wp-block-button__link"),
+          page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 60000 }),
+        ]);
+        console.log("Successfully navigated to the current ban list page.");
+
+        await page.waitForSelector(".cardlist.centertable", { timeout: 30000 });
+        console.log("Table selector found.");
+
+        // Added a try-catch *around* the page.evaluate
+        try {
+          banList = await page.evaluate(() => {
+            try {
+              console.log("Inside page.evaluate - Konami");
+              const table = document.querySelector(".wp-block-group__inner-container");
+              if (!table) {
+
+                return { forbidden: [], limited: [], semiLimited: [] };
+              }
+
+              const rows = Array.from(table.querySelectorAll("tr.cardlist_effect, tr.cardlist_fusion, tr.cardlist_synchro, tr.cardlist_xyz, tr.cardlist_link, tr.cardlist_spell, tr.cardlist_trap"));
+
+              const forbidden = [];
+              const limited = [];
+              const semiLimited = [];
+
+              for (const row of rows) { // Changed to for...of
+                try {
+                  const cells = Array.from(row.querySelectorAll("td"));
+                  if (cells.length >= 3) { // Changed to 3, to prevent errors.
+                    const cardName = cells[1].innerText.trim();
+                    const advancedFormatStatus = cells[2].innerText.trim().toLowerCase();
+                    console.log(`Card: ${cardName}, Status: ${advancedFormatStatus}`);
+                    if (advancedFormatStatus === "forbidden") {
+                      forbidden.push(cardName);
+                    } else if (advancedFormatStatus === "limited") {
+                      limited.push(cardName);
+                    } else if (advancedFormatStatus === "semi-limited") {
+                      semiLimited.push(cardName);
+                    }
+                  }
+                } catch (rowError) {
+                  console.error("Error processing a row:", rowError);
+                }
+              }
+              console.log("Konami ban list scraping complete.");
+
+              return { forbidden, limited, semiLimited };
+            } catch (evaluateError) {
+              console.error("Error in page.evaluate (Konami):", evaluateError);
+
+              return { forbidden: [], limited: [], semiLimited: [] };
+            }
+          });
+          console.log("Final ban list:", banList);
+
+          return banList;
+        } catch (e) {
+          console.error("Error during page.evaluate:", e);
+          throw e; // Re-throw any error from page.evaluate
+        }
+
+      } catch (error) {
+        console.error("Error during Konami scraping:", error);
+        throw error;
       }
-      root.forEach(child => cards.push(child.alt));
+    } else {
+      console.log("Scraping ban list from Format Library...");
+      const timeout = 30000; // Increased timeout for individual selectors
+      try {
+        await page.waitForSelector("#forbidden", { timeout });
+        await page.waitForSelector("#limited", { timeout });
+        await page.waitForSelector("#semi-limited", { timeout });
 
-      return cards;
-    });
-    const limitedList = await page.evaluate(() => {
-      const cards = [];
-      const root = document.querySelectorAll("#limited img");
-      if (!root) {
-        console.log("No element found with #root");
+        banList = await page.evaluate(() => {
+          const getCardNames = (selector) => {
+            const elements = document.querySelectorAll(selector + " img");
 
-        return null;
+            return Array.from(elements).map(img => img.alt.trim());
+          };
+
+          return {
+            forbidden: getCardNames("#forbidden"),
+            limited: getCardNames("#limited"),
+            semiLimited: getCardNames("#semi-limited"),
+          };
+        });
+        console.log("Ban list scraped from Format Library.", banList);
+
+        return banList;
+      } catch (error) {
+        console.error(`Error scraping Format Library for ${formatName}:`, error);
+        throw error;
       }
-      root.forEach(child => cards.push(child.alt));
-
-      return cards;
-    });
-    const semiLimitedList = await page.evaluate(() => {
-      const cards = [];
-      const root = document.querySelectorAll("#semi-limited img");
-      if (!root) {
-        console.log("No element found with #root");
-
-        return null;
-      }
-      root.forEach(child => cards.push(child.alt));
-
-      return cards;
-    });
-    const banList = {
-      forbidden:forbiddenList,
-      limited:limitedList,
-      semiLimited:semiLimitedList
-    };
-    await browser.close();
-
-    return banList;
+    }
+  } catch (error) {
+    console.error(`Error in getFormatBanList for ${formatName}:`, error);
+    throw error;
+  } finally {
+    if (browser) {
+      console.log("Closing browser...");
+      await browser.close();
+    }
   }
-  catch (e) {
-    console.log(e);
-    throw e;
-  }
-
 };
 
 export const writeToFormatTable = async () => {
   try {
     const formats = await getFormats();
-    console.log(formats);
-    for (const format of formats) {
-      const banList = await getFormatBanList(format);
+    const existingFormats = await readJsonFile(FORMATS_FILE);
 
-      const params = {
-        TableName: DYNAMODB_TABLE_NAMES.FORMATS,
-        Item: {
+    for (const format of formats) {
+      if (!existingFormats[format]) {
+        const banList = await getFormatBanList(format);
+        existingFormats[format] = {
           format_name: format,
           ban_list: banList,
-        },
-        ConditionExpression: "attribute_not_exists(format_name)"
-      };
-
-      console.log(params);
-      await putItem(params);  // Make sure to await the putItem function
-    } }
+        };
+        console.log(`Writing format: ${format}`);
+      }
+    }
+    await writeJsonFile(FORMATS_FILE, existingFormats);
+    console.log("All formats processed.");
+  }
   catch (error) {
     console.log(error);
   }
 };
 
 export const getFormatFilters = async () => {
-  const params = {
-    TableName: DYNAMODB_TABLE_NAMES.FORMATS,
-  };
   try {
-    const command = new ScanCommand(params);
-    const data = await client.send(command);
-    const formatFilters = data.Items.map(item => item.format_name.S);
+    const formatsData = await readJsonFile(FORMATS_FILE);
 
-    return formatFilters;
-
+    return Object.keys(formatsData);
   } catch (err) {
-    console.error("Error scanning table:", err);
+    console.error("Error reading formats file:", err);
     throw err;
-  } };
+  }
+};
 
 //This returns an object of all the banned cards
 const banListValidator = async (format, cardList) => {
-  const params = {
-    TableName: DYNAMODB_TABLE_NAMES.FORMATS,
-    Key: { format_name: { S: format.toString() } }
-  };
-  const cardCounts = cardList.reduce((counts, card) => {
-    counts[card.name.S] = (counts[card.name.S] || 0) + 1;
+  try {
+    const formatsData = await readJsonFile(FORMATS_FILE);
+    const formatData = formatsData[format];
 
-    return counts;
-  }, {});
-  const allBannedCards = {};
-  const banList = await getItem(params);
-  const forbidden = banList.ban_list.M.forbidden.L.map((item => item.S));
-  const limited = banList.ban_list.M.limited.L.map((item => item.S));
-  const semiLimited = banList.ban_list.M.semiLimited.L.map((item => item.S));
-  const forbiddenCardsInDeck = cardList.filter(card => forbidden.includes(card.name.S));
-  const forbiddenCardNames = forbiddenCardsInDeck.reduce((uniqueNames, card) => {
-    if (!uniqueNames.has(card.name.S)) {
-      uniqueNames.add(card.name.S);
+    if (!formatData || !formatData.ban_list) {
+      console.warn(`Format "${format}" not found or has no ban list.`);
+
+      return false;
     }
 
-    return uniqueNames;
-  }, new Set());
+    const cardCounts = cardList.reduce((counts, card) => {
+      counts[card.name] = (counts[card.name] || 0) + 1;
 
-  const forbiddenCardNamesString = Array.from(forbiddenCardNames).join(", ");
+      return counts;
+    }, {});
 
-  const limitedCardsInDeck = cardList.filter(card => limited.includes(card.name.S) && cardCounts[card.name.S] > 1);
-  const limitedCardNames = limitedCardsInDeck.reduce((uniqueNames, card) => {
-    if (!uniqueNames.has(card.name.S)) {
-      uniqueNames.add(card.name.S);
+    const allBannedCards = {};
+    const { forbidden = [], limited = [], semiLimited = [] } = formatData.ban_list;
+
+    const forbiddenCardsInDeck = cardList.filter(card => forbidden.includes(card.name));
+    const forbiddenCardNames = [...new Set(forbiddenCardsInDeck.map(card => card.name))].join(", ");
+    if (forbiddenCardsInDeck.length > 0) {
+      allBannedCards["forbidden"] = forbiddenCardNames;
     }
 
-    return uniqueNames;
-  }, new Set());
-
-  const limitedCardNamesString = Array.from(limitedCardNames).join(", ");
-
-  const semiLimitedCardsInDeck = cardList.filter(card => semiLimited.includes(card.name.S) && cardCounts[card.name.S] > 2);
-  const semiLimitedCardNames = semiLimitedCardsInDeck.reduce((uniqueNames, card) => {
-    if (!uniqueNames.has(card.name.S)) {
-      uniqueNames.add(card.name.S);
+    const limitedCardsInDeck = cardList.filter(card => limited.includes(card.name) && cardCounts[card.name] > 1);
+    const limitedCardNames = [...new Set(limitedCardsInDeck.map(card => card.name))].join(", ");
+    if (limitedCardsInDeck.length > 0) {
+      allBannedCards["limited"] = limitedCardNames;
     }
 
-    return uniqueNames;
-  }, new Set());
+    const semiLimitedCardsInDeck = cardList.filter(card => semiLimited.includes(card.name) && cardCounts[card.name] > 2);
+    const semiLimitedCardNames = [...new Set(semiLimitedCardsInDeck.map(card => card.name))].join(", ");
+    if (semiLimitedCardsInDeck.length > 0) {
+      allBannedCards["semiLimited"] = semiLimitedCardNames;
+    }
 
-  const semiLimitedCardNamesString = Array.from(semiLimitedCardNames).join(", ");
+    return Object.keys(allBannedCards).length > 0 ? allBannedCards : false;
 
-  if (forbiddenCardsInDeck.length > 0) {
-    allBannedCards["forbidden"] = forbiddenCardNamesString;
-  }
-  if (limitedCardsInDeck.length > 0) {
-    allBannedCards["limited"] = limitedCardNamesString;
-  }
-  if (semiLimitedCardsInDeck.length > 0) {
-    allBannedCards["semiLimited"] = semiLimitedCardNamesString;
-  }
+  } catch (error) {
+    console.error("Error validating ban list:", error);
 
-  if (Object.values(allBannedCards).length > 0) {
-    return allBannedCards;
-  }
-  else {
     return false;
   }
 };
