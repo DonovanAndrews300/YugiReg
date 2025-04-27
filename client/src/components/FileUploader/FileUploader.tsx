@@ -75,11 +75,15 @@ export default function FileUploader() {
   };
 
   const onDrop = useCallback((acceptedFiles: any[]) => {
-    const isYdk = acceptedFiles.length && acceptedFiles[0].name.endsWith('.ydk');
-    if (isYdk) {
+    const isValidFile = acceptedFiles.length && (
+      acceptedFiles[0].name.endsWith('.ydk') ||
+      acceptedFiles[0].name.endsWith('.xlsx') ||
+      acceptedFiles[0].name.endsWith('.csv')
+    );
+    if (isValidFile) {
       setFile(acceptedFiles[0]);
     } else {
-      toast.error("Incorrect file type");
+      toast.error("Incorrect file type. Please upload a .ydk, .xlsx, or .csv file.");
     }
   }, [filters]);
 

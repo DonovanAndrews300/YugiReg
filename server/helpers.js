@@ -5,6 +5,9 @@ import { existsSync } from "fs";
 import puppeteer from "puppeteer";
 import axios from "axios";
 import path from "path";
+// Import the necessary libraries
+import * as XLSX from "xlsx";
+import { parse as csvParse } from "csv-parse";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const CARD_DATABASE_FILE = path.join(DATA_DIR, "ygocarddatabase.json");
@@ -66,8 +69,8 @@ export const isValidFile = (file) => {
   if (!file) {
     throw new Error("No file found");
   };
-  if (!file.originalname.endsWith(".ydk")) {
-    throw new Error("Invalid file type");
+  if (!file.originalname.endsWith(".ydk") && !file.originalname.endsWith(".xlsx") && !file.originalname.endsWith(".csv")) {
+    throw new Error("Invalid file type. Only .ydk, .xlsx, and .csv files are supported.");
   }
   if (file.size > MAX_FILE_SIZE) {
     throw new Error("Max file size exceeded");
@@ -79,6 +82,105 @@ const parseYdkFile = (ydkFile) => {
   const data = Buffer.from(ydkFile, "utf-8");
 
   return data.toString("utf-8").trim().split("\n");
+};
+
+const parseXlsxFile = (xlsxFile) => {
+  const workbook = XLSX.read(xlsxFile, { type: "buffer" });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+
+  const cardIds = { main: [], extra: [], side: [] };
+
+  jsonData.forEach(row => {
+    const deckType = row[0]?.toString().trim().toLowerCase(); // Deck type from the first column
+    const cardId = row[1]?.toString().trim();       // Card ID from the second column
+
+    if (deckType === "#main" || deckType === "main") { //added #main
+      if (!isNaN(Number(cardId))) {
+        cardIds.main.push(cardId);
+      }
+    } else if (deckType === "#extra" || deckType === "extra") { //added #extra
+      if (!isNaN(Number(cardId))) {
+        cardIds.extra.push(cardId);
+      }
+    } else if (deckType === "!side" || deckType === "side") {  //added !side
+      if (!isNaN(Number(cardId))) {
+        cardIds.side.push(cardId);
+      }
+    }
+  });
+
+  return cardIds;
+};
+
+// Helper function to parse Excel file
+// Helper function to parse CSV file
+const parseCsvFile = async (csvFile) => {
+  console.log("parsing");
+  const data = Buffer.from(csvFile, "utf-8").toString();
+  const records = await new Promise((resolve, reject) => {
+    csvParse(data, {
+      columns: false, // Assuming no header row with column names
+      trim: true,
+      skip_empty_lines: true,
+    }, (err, records) => {
+      if (err) reject(err);
+      else resolve(records);
+    });
+  });
+
+  const cardIds = { main: [], extra: [], side: [] };
+  let currentDeck = "";
+
+  // Iterate through rows from CSV data
+  records.forEach(row => {
+    // console.log(row)
+    // Assuming the first column contains card IDs or deck markers
+    const deckType = row[0]?.toString().trim().toLowerCase();
+    const cardId = row[1]?.toString().trim();
+    if (deckType === "#main" || deckType === "main") {
+      if (!isNaN(Number(cardId))) {
+        cardIds.main.push(cardId);
+      }
+    } else if (deckType === "#extra" || deckType === "extra") {
+      if (!isNaN(Number(cardId))) {
+        cardIds.extra.push(cardId);
+      }
+    } else if (deckType === "!side" || deckType === "side") {
+      if (!isNaN(Number(cardId))) {
+        cardIds.side.push(cardId);
+      }
+    }
+  });
+
+  return cardIds;
+};
+
+// Function to get unique card IDs from various file types
+export const getUniqueCardIdsFromFile = async (fileBuffer, originalFileName) => {
+  if (originalFileName.endsWith(".ydk")) {
+    return await getUniqueYdkIds(fileBuffer.toString("utf-8"));
+  } else if (originalFileName.endsWith(".xlsx")) {
+    return parseXlsxFile(fileBuffer);
+  } else if (originalFileName.endsWith(".csv")) {
+    return await parseCsvFile(fileBuffer);
+  } else {
+    throw new Error("Unsupported file type");
+  }
+};
+
+// Function to get all card IDs from various file types
+export const getCardIdsFromFile = async (fileBuffer, originalFileName) => {
+  if (originalFileName.endsWith(".ydk")) {
+    return await getYdkIds(fileBuffer.toString("utf-8"));
+  } else if (originalFileName.endsWith(".xlsx")) {
+    return parseXlsxFile(fileBuffer);
+  } else if (originalFileName.endsWith(".csv")) {
+    return await parseCsvFile(fileBuffer);
+  } else {
+    throw new Error("Unsupported file type");
+  }
 };
 
 // Function to get unique card IDs from YDK file
@@ -147,6 +249,33 @@ export const getDeck = async (ydk) => {
   return fullDeck;
 };
 
+// Function to get a deck from various file types
+export const getDeckFromFile = async (fileBuffer, originalFileName) => {
+  const singlesDeckIds = await getCardIdsFromFile(fileBuffer, originalFileName);
+  const cardDatabase = await readJsonFile(CARD_DATABASE_FILE);
+  let fullDeck = { main: [], extra: [], side: [] };
+
+  for (const id of singlesDeckIds.main) {
+    if (cardDatabase[id]) {
+      fullDeck.main.push(cardDatabase[id]);
+    }
+  }
+
+  for (const id of singlesDeckIds.extra) {
+    if (cardDatabase[id]) {
+      fullDeck.extra.push(cardDatabase[id]);
+    }
+  }
+
+  for (const id of singlesDeckIds.side) {
+    if (cardDatabase[id]) {
+      fullDeck.side.push(cardDatabase[id]);
+    }
+  }
+
+  return fullDeck;
+};
+
 // Function to fill out PDF form with deck list
 export const fillForm = async (deckList, playerInfo) => {
   try {
@@ -175,7 +304,7 @@ export const fillForm = async (deckList, playerInfo) => {
           //I call this cardString string but the extra deck and side deck fields have different card count names
           const cardString = deckType === "Extra Deck" || deckType === "Side Deck" ? "" : "Card ";
           form.getTextField(`${deckType} ${cardNumber}`).setText(card.name);
-          form.getTextField(`${deckType} ${cardString}${cardNumber} Count`).setText(`${count}`);
+          form.getTextField(`${deckType} ${cardString}${cardNumber} Count`).setText(String(count)); // Convert count to string here!
           // This is to avoid adding duplicates
           filledOutCards.push(card.name);
           cardNumber++;

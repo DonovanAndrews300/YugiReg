@@ -3,7 +3,7 @@ import cors from "cors";
 import multer from "multer";
 import { config } from "dotenv";
 import { DEFAULT_PORT } from "./constants.js";
-import { writeFromYGOPRO, writeToFormatTable, getDeck, fillForm, isValidFile, getFormatFilters } from "./helpers.js";
+import { writeFromYGOPRO, writeToFormatTable, getDeckFromFile, fillForm, isValidFile, getFormatFilters, getDeck } from "./helpers.js"; // Import the new getDeckFromFile
 
 config();
 
@@ -39,7 +39,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const handlePostYDKRoute = async (req, res) => {
   const file = req.file;
   try {
-    isValidFile(file);
+    isValidFile(file); // This now checks for .ydk, .xlsx, and .csv
     res.setHeader("Content-Type", "application/octet-stream");
     res.setHeader("Content-Disposition", "attachment; filename=\"filledform.pdf\"");
 
@@ -49,7 +49,13 @@ const handlePostYDKRoute = async (req, res) => {
       konamiId: req.body.konamiId,
       filter: req.body.filter
     };
-    const loadedDeck = await getDeck(file.buffer);
+
+    let loadedDeck;
+    if (file.originalname.endsWith(".ydk")) {
+      loadedDeck = await getDeck(file.buffer); // Use getDeck for .ydk
+    } else {
+      loadedDeck = await getDeckFromFile(file.buffer, file.originalname); // Use getDeckFromFile for others
+    }
     const filledForm = await fillForm(loadedDeck, playerInfo);
     res.send(Buffer.from(filledForm));
   }
