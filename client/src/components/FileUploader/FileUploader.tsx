@@ -172,15 +172,25 @@ export default function FileUploader() {
           <div className="buttons-container">
             {file && (
               <>
-                <button type="button" onClick={removeFile}>
+                <button
+                  type="button"
+                  onClick={removeFile}
+                  style={{ width: '100px', height: '40px' }} 
+                >
                   Remove
                 </button>
-                <button type="button" disabled={loading} onClick={onSubmit}>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={onSubmit}
+                  style={{ width: '100px', height: '40px' }}
+                >
                   Submit
                 </button>
               </>
             )}
           </div>
+
         </div>
       </div>
       <ToastContainer position="top-center"/>
