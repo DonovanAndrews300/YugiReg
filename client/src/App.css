@@ -64,6 +64,12 @@ main {
   border-radius: 10px;
 }
 
+.dark-magician-img {
+  width: 400px;
+  height: 550px;
+  padding: 5px;
+}
+
 .answer {
   font-size: 16px;
   color: #ccc;

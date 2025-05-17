@@ -4,7 +4,11 @@ import React from 'react';
 export default function Instructions() {
   return (
     <div className='instructions-container'>
-      <img alt="Dark Magician and Dark Magician Girl" src="https://i.redd.it/sj6oha0on3a11.jpg" />
+              <img
+          alt="Dark Magician and Dark Magician Girl"
+          src="dmg.png"
+          className="dark-magician-img"
+        />
       <ol className='how-to-list'>
         <h3>Instructions</h3>
         <li>Retrieve the YDK file for your decklist.</li>
