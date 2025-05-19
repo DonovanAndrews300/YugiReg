@@ -1,5 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
+// Extend the Window interface for TypeScript
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
+
 const AdBanner: React.FC = () => {
   const adRef = useRef<HTMLDivElement>(null);
 
@@ -26,8 +33,8 @@ const AdBanner: React.FC = () => {
       <ins
         className="adsbygoogle"
         style={{ display: 'inline-block', width: '160px', height: '600px' }}
-      data-ad-client="ca-pub-6432708839285268"
-      data-ad-slot="3609580080"
+        data-ad-client="ca-pub-6432708839285268"
+        data-ad-slot="3609580080"
         data-ad-format="auto"
         data-full-width-responsive="false"
       />
