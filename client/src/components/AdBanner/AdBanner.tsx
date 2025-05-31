@@ -1,45 +1,39 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
-// Extend the Window interface for TypeScript
+interface EzoicAdProps {
+  id: number; // Placeholder ID like 101
+  width?: string;
+  height?: string;
+}
+
 declare global {
   interface Window {
-    adsbygoogle: any[];
+    ezstandalone: {
+      cmd: Array<() => void>;
+      showAds: (...ids: number[]) => void;
+    };
   }
 }
 
-const AdBanner: React.FC = () => {
-  const adRef = useRef<HTMLDivElement>(null);
-
+const EzoicAd: React.FC<EzoicAdProps> = ({ id, width = '100%', height = 'auto' }) => {
   useEffect(() => {
-    const insElements = adRef.current?.getElementsByClassName('adsbygoogle') || [];
-
-    for (let i = 0; i < insElements.length; i++) {
-      const ins = insElements[i] as HTMLElement;
-
-      // Check if ad already initialized
-      if (!ins.getAttribute('data-ad-status')) {
-        try {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-          ins.setAttribute('data-ad-status', 'done');
-        } catch (e) {
-          console.error('Adsbygoogle push error:', e);
-        }
-      }
+    if (typeof window !== 'undefined' && window.ezstandalone?.cmd) {
+      window.ezstandalone.cmd.push(() => {
+        window.ezstandalone.showAds(id);
+      });
     }
-  }, []);
+  }, [id]);
 
   return (
-    <div ref={adRef} style={{ width: '160px', height: '600px' }}>
-      <ins
-        className="adsbygoogle"
-        style={{ display: 'inline-block', width: '160px', height: '600px' }}
-        data-ad-client="ca-pub-6432708839285268"
-        data-ad-slot="3609580080"
-        data-ad-format="auto"
-        data-full-width-responsive="false"
-      />
-    </div>
+    <div
+      id={`ezoic-pub-ad-placeholder-${id}`}
+      style={{
+        width,
+        height,
+        display: 'block',
+      }}
+    />
   );
 };
 
-export default AdBanner;
+export default EzoicAd;

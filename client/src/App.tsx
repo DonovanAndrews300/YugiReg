@@ -12,7 +12,7 @@ export default function App() {
       
       {/* Left Ad Outside Main */}
       <aside style={{ width: '160px', marginRight: '1rem' }} className="ad-left">
-        <AdBanner />
+        <AdBanner id={107} />
       </aside>
 
       {/* Main Content */}
@@ -43,7 +43,7 @@ export default function App() {
 
       {/* Right Ad Outside Main */}
       <aside style={{ width: '160px', marginLeft: '1rem' }} className="ad-right">
-        <AdBanner />
+        <AdBanner id={107}/>
       </aside>
     </div>
   );
